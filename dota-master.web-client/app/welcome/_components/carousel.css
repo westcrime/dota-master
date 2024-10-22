@@ -1,0 +1,46 @@
+
+  
+  .carousel {
+    position: relative;
+    text-align: center;
+    font-size: 36px;
+    line-height: 54px; /* Пример: 36px * 1.5 */
+    height: 54px;
+  }
+  
+  .change_outer {
+    position: absolute;
+    top: 0;
+    text-align: left;
+    height: 54px;
+    overflow: hidden;
+  }
+  
+  .change_inner {
+    position: relative;
+    animation: rotate 8s ease-in-out infinite;
+  }
+  
+  .element {
+    display: block;
+    font-weight: 700;
+  }
+  
+  @keyframes rotate {
+    0%, 20% {
+      transform: translateY(0);
+    }
+    25%, 45% {
+      transform: translateY(-54px); /* Пример: 36px * -1.5 */
+    }
+    50%, 70% {
+      transform: translateY(-108px); /* Пример: 36px * -3 */
+    }
+    75%, 95% {
+      transform: translateY(-162px); /* Пример: 36px * -4.5 */
+    }
+    100% {
+      transform: translateY(-216px); /* Пример: 36px * -6 */
+    }
+  }
+  
