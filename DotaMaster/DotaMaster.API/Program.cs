@@ -17,11 +17,12 @@ builder.Services.AddHttpClient();
 
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowAllOrigins", policy =>
+    options.AddDefaultPolicy(policy =>
     {
-        policy.AllowAnyOrigin() // Разрешить любой источник (для разработки)
+        policy.WithOrigins("http://localhost:3000") // URL вашего фронтенда
+              .AllowAnyHeader()
               .AllowAnyMethod()
-              .AllowAnyHeader();
+              .AllowCredentials(); // Разрешить отправку куков
     });
 });
 
@@ -51,7 +52,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseCors("AllowAllOrigins");
+app.UseCors();
 
 app.UseAuthentication();
 app.UseAuthorization();

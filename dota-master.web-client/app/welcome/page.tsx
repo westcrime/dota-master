@@ -12,10 +12,12 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import { SiDota2 } from "react-icons/si";
+import { Link } from "lucide-react";
 
 const Welcome = () => {
     const [ steamID, setSteamID ] = useState('')
     const [ error, setError ] = useState('')
+    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_DOMAIN;
 
     const handleLogin = async () => {
         
@@ -44,9 +46,11 @@ const Welcome = () => {
                     <Carousel />
                 </div>
                 
-                <Button className='font-bold mt-[3vh] text-lg flex items-center z-10'>
-                    <ImSteam2 size={24} className='mr-1' />Log in via Steam ID
-                </Button> 
+                <a href={`${backendUrl}/auth/login`}>
+                    <Button className='font-bold mt-[3vh] text-lg flex items-center z-10'>
+                        <ImSteam2 size={24} className='mr-1' />Log in via Steam ID
+                    </Button>
+                </a> 
             </div>
         </>
     );

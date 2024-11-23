@@ -13,14 +13,14 @@ namespace DotaMaster.API.Controllers
         public IActionResult Login()
         {
             // Редирект на Steam для авторизации
-            return Challenge(new AuthenticationProperties { RedirectUri = "/" }, "Steam");
+            return Challenge(new AuthenticationProperties { RedirectUri = "http://localhost:3000/profile" }, "Steam");
         }
 
         [HttpGet("logout")]
         public IActionResult Logout()
         {
             // Удаление куков аутентификации
-            return SignOut(new AuthenticationProperties { RedirectUri = "/" }, CookieAuthenticationDefaults.AuthenticationScheme);
+            return SignOut(new AuthenticationProperties { RedirectUri = "http://localhost:3000/profile" }, CookieAuthenticationDefaults.AuthenticationScheme);
         }
 
         [HttpGet("current-user")]

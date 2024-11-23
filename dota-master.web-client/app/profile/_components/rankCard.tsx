@@ -14,6 +14,7 @@ interface PlayerData {
     rankImage: string;
     winCount: number;
     loseCount: number;
+    isDotaPlusSub: boolean;
 }
 
 export const RankCard = ({ steamUrl }: ProfileData) => {
@@ -22,33 +23,39 @@ export const RankCard = ({ steamUrl }: ProfileData) => {
 
     useEffect(() => {
         const fetchPlayerData = async () => {
-            // try {
-            //     const response = await fetch(`/api/steam?url=${encodeURIComponent(steamUrl)}`);
-            //     if (!response.ok) throw new Error("Ошибка загрузки данных");
-            //     const data = await response.json();
-            //     setPlayerData({
-            //         nickname: data.nickname,
-            //         id: data.id,
-            //         avatar: data.avatar,
-            //     });
-            // } catch (error) {
-            //     console.error(error);
-            // } finally {
-            //     setLoading(false);
-            // }
-            setLoading(true);
-            await new Promise((resolve) => setTimeout(resolve, 200));
-            setPlayerData({
-                        rank: "Divine",
-                        rankImage: "https://gamepedia.cursecdn.com/dota2_gamepedia/thumb/b/b7/SeasonalRank7-1.png/140px-SeasonalRank7-1.png?version=8cd74e57b63ceb730d7b36a8f6589b9f",
-                        winCount: 1423,
-                        loseCount: 1350
-                    });
-            setLoading(false)
+            console.log("Starting fetchPlayerData..."); // Лог начала вызова
+    
+            try {
+                const url = `${process.env.NEXT_PUBLIC_BACKEND_DOMAIN}/profile/basic-info`;
+                console.log(`Fetching data from: ${url}`); // Лог URL запроса
+                
+                const response = await fetch(url);
+                console.log(`Response status: ${response.status}`); // Лог статуса ответа
+    
+                if (!response.ok) throw new Error(`Failed to fetch data. Status: ${response.status}`);
+                
+                const data = await response.json();
+                console.log("Fetched data:", data); // Лог данных ответа
+                
+                setPlayerData({
+                    winCount: data.wins,
+                    loseCount: data.loses,
+                    rank: data.rank,
+                    isDotaPlusSub: data.isDotaPlusSub,
+                    rankImage: "undef"
+                });
+    
+                console.log("Player data updated successfully.");
+            } catch (error) {
+                console.error("Error during fetchPlayerData:", error); // Лог ошибок
+            } finally {
+                setLoading(false);
+                console.log("Loading state set to false."); // Лог завершения загрузки
+            }
         };
-
+    
         fetchPlayerData();
-    }, [steamUrl]);
+    }, [steamUrl]);    
 
     if (loading) {
         return (
