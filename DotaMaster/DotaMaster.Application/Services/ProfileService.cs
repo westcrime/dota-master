@@ -32,5 +32,11 @@ namespace DotaMaster.Application.Services
             var basicInfo = await _profileRepository.GetBasicInfoAsync(steamId);
             return _mapper.Map<BasicInfoModel>(basicInfo);
         }
+
+        public async Task<RecordsModel> GetRecords(string steamId)
+        {
+            var records = await _profileRepository.GetRecordsAsync(steamId);
+            return _mapper.Map<RecordsModel>(records);
+        }
     }
 }

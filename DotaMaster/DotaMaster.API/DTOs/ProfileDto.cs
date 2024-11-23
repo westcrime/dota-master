@@ -1,4 +1,4 @@
 ﻿namespace DotaMaster.API.DTOs
 {
-    public record ProfileDto(string SteamId, string Username, string AvatarUrl);
+    public record ProfileDto(string DotaId, string SteamId, string Username, string AvatarUrl);
 }

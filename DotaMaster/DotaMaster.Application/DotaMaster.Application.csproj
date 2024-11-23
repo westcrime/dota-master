@@ -12,6 +12,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\DotaMaster.Data\DotaMaster.Data.csproj" />
+    <ProjectReference Include="..\DotaMaster.Domain\DotaMaster.Domain.csproj" />
   </ItemGroup>
 
 </Project>

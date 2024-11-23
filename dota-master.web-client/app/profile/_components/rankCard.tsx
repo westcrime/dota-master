@@ -15,11 +15,13 @@ interface PlayerData {
     winCount: number;
     loseCount: number;
     isDotaPlusSub: boolean;
+    dotaId: string;
 }
 
 export const RankCard = ({ steamUrl }: ProfileData) => {
     const [playerData, setPlayerData] = useState<PlayerData | null>(null);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState('')
 
     useEffect(() => {
         const fetchPlayerData = async () => {
@@ -29,10 +31,17 @@ export const RankCard = ({ steamUrl }: ProfileData) => {
                 const url = `${process.env.NEXT_PUBLIC_BACKEND_DOMAIN}/profile/basic-info`;
                 console.log(`Fetching data from: ${url}`); // Лог URL запроса
                 
-                const response = await fetch(url);
+                const response = await fetch(url, {
+                    method: 'GET',
+                    credentials: 'include'
+                });
                 console.log(`Response status: ${response.status}`); // Лог статуса ответа
     
-                if (!response.ok) throw new Error(`Failed to fetch data. Status: ${response.status}`);
+                if (!response.ok) {
+                    const errorData = await response.json(); // Получаем подробности ошибки
+                    setError(`${errorData.status}: ${errorData.title} - ${errorData.detail}`);
+                    throw new Error(`${errorData.status}: ${errorData.detail}`);
+                }                
                 
                 const data = await response.json();
                 console.log("Fetched data:", data); // Лог данных ответа
@@ -42,7 +51,8 @@ export const RankCard = ({ steamUrl }: ProfileData) => {
                     loseCount: data.loses,
                     rank: data.rank,
                     isDotaPlusSub: data.isDotaPlusSub,
-                    rankImage: "undef"
+                    rankImage: "undef",
+                    dotaId: data.dotaId
                 });
     
                 console.log("Player data updated successfully.");
@@ -69,7 +79,7 @@ export const RankCard = ({ steamUrl }: ProfileData) => {
     if (!playerData) {
         return (
             <Card className="bg-gray-800 px-4 p-6">
-                <p className="text-red-500">Не удалось загрузить данные</p>
+                <p className="text-red-500">{error}</p>
             </Card>
         );
     }

@@ -1,3 +1,4 @@
+using DotaMaster.API.Extensions;
 using DotaMaster.Application.Extensions;
 using Microsoft.AspNetCore.Authentication.Cookies;
 
@@ -27,16 +28,7 @@ builder.Services.AddCors(options =>
 });
 
 // Добавление аутентификации
-builder.Services.AddAuthentication(options =>
-{
-    options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
-    options.DefaultChallengeScheme = "Steam";
-})
-.AddCookie() // Добавляем Cookie аутентификацию
-.AddSteam(options =>
-{
-    options.SignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
-});
+builder.Services.AddAuthExtensions();
 
 // Добавление авторизации
 builder.Services.AddAuthorization();
@@ -51,6 +43,8 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+app.UseExceptionHandler();
 
 app.UseCors();
 

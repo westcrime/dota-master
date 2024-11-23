@@ -1,4 +1,5 @@
-﻿using DotaMaster.API.MappingProfiles;
+﻿using DotaMaster.API.Infrastructure;
+using DotaMaster.API.MappingProfiles;
 using DotaMaster.Application.MappingProfiles;
 using DotaMaster.Application.Services;
 using DotaMaster.Data.Extensions;
@@ -18,6 +19,12 @@ namespace DotaMaster.Application.Extensions
 
             // Adding mapping profile
             services.AddAutoMapper(typeof(ApiMappingProfile));
+
+            // Adding problem details
+            services.AddProblemDetails();
+
+            // Global exception handler
+            services.AddExceptionHandler<GlobalExceptionHandler>();
 
             return services;
         }

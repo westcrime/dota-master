@@ -11,6 +11,8 @@ namespace DotaMaster.API.MappingProfiles
             CreateMap<ProfileModel, ProfileDto>();
 
             CreateMap<BasicInfoModel, BasicInfoDto>();
+
+            CreateMap<RecordsModel, RecordsDto>();
         }
     }
 }

@@ -20,7 +20,7 @@ namespace DotaMaster.API.Controllers
         public IActionResult Logout()
         {
             // Удаление куков аутентификации
-            return SignOut(new AuthenticationProperties { RedirectUri = "http://localhost:3000/profile" }, CookieAuthenticationDefaults.AuthenticationScheme);
+            return SignOut(new AuthenticationProperties { RedirectUri = "http://localhost:3000/welcome" }, CookieAuthenticationDefaults.AuthenticationScheme);
         }
 
         [HttpGet("current-user")]

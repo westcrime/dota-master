@@ -6,5 +6,5 @@ using System.Threading.Tasks;
 
 namespace DotaMaster.Application.Models
 {
-    public record ProfileModel(string SteamId, string Username, string AvatarUrl);
+    public record ProfileModel(string DotaId, string SteamId, string Username, string AvatarUrl);
 }

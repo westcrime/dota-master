@@ -46,7 +46,7 @@ export default function Layout({
                         <DropdownMenuContent className="p-4">
                             <DropdownMenuLabel>Мой профиль</DropdownMenuLabel>
                             <DropdownMenuSeparator />
-                            <DropdownMenuItem><RiLogoutBoxLine /> Выйти</DropdownMenuItem>
+                            <a href={`${process.env.NEXT_PUBLIC_BACKEND_DOMAIN}/auth/logout`}><DropdownMenuItem className="hover: cursor-pointer"><RiLogoutBoxLine /> Выйти</DropdownMenuItem></a>
                             <DropdownMenuItem><ImSteam2 /> Перейти в аккаунт Steam</DropdownMenuItem>
                         </DropdownMenuContent>
                     </DropdownMenu>
