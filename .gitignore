@@ -1,19 +1,37 @@
-# The following command works for downloading when using Git for Windows:
-# curl -LOf http://gist.githubusercontent.com/kmorcinek/2710267/raw/.gitignore
-#
-# Download this file using PowerShell v3 under Windows with the following comand:
-# Invoke-WebRequest https://gist.githubusercontent.com/kmorcinek/2710267/raw/ -OutFile .gitignore
-#
-# or wget:
-# wget --no-check-certificate http://gist.githubusercontent.com/kmorcinek/2710267/raw/.gitignore
+# From .NET Core 3.0 you can use the command: `dotnet new gitignore` to generate a customizable .gitignore file
+
+*.swp
+*.*~
+project.lock.json
+.DS_Store
+*.pyc
+
+# Visual Studio Code
+.vscode
 
 # User-specific files
 *.suo
 *.user
 *.sln.docstates
+*.userosscache
 
 # Build results
 [Dd]ebug/
+[Dd]ebugPublic/
+[Rr]elease/
+[Rr]eleases/
+x64/
+x86/
+build/
+bld/
+[Bb]in/
+[Oo]bj/
+msbuild.log
+msbuild.err
+msbuild.wrn
+
+# Visual Studio 2015
+.vs/
 [Rr]elease/
 x64/
 [Bb]in/
