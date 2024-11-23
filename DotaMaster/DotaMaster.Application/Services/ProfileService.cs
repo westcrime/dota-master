@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using DotaMaster.Application.Models;
+using DotaMaster.Data.Entities;
 using DotaMaster.Data.Repositories;
 using System;
 using System.Collections.Generic;
@@ -20,10 +21,16 @@ namespace DotaMaster.Application.Services
             _mapper = mapper;
         }
 
-        public async Task<ProfileModel> Get(string steamId)
+        public async Task<ProfileModel> GetProfile(string steamId)
         {
             var profile = await _profileRepository.GetSteamUserProfileAsync(steamId);
             return _mapper.Map<ProfileModel>(profile);
+        }
+
+        public async Task<BasicInfoModel> GetBasicInfo(string steamId)
+        {
+            var basicInfo = await _profileRepository.GetBasicInfoAsync(steamId);
+            return _mapper.Map<BasicInfoModel>(basicInfo);
         }
     }
 }

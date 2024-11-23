@@ -15,6 +15,7 @@ namespace DotaMaster.Application.MappingProfiles
         {
             // Profile mapping
             CreateMap<Data.Entities.Profile, ProfileModel>();
+            CreateMap<Data.Entities.BasicInfo, BasicInfoModel>();
         }
     }
 }

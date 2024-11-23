@@ -9,6 +9,8 @@ namespace DotaMaster.API.MappingProfiles
         {
             // Profile mapping
             CreateMap<ProfileModel, ProfileDto>();
+
+            CreateMap<BasicInfoModel, BasicInfoDto>();
         }
     }
 }

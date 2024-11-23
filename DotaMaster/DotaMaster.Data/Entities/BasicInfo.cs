@@ -13,5 +13,6 @@ namespace DotaMaster.Data.Entities
         public string Rank { get; set; }
         public int Loses { get; set; }
         public int Wins { get; set; }
+        public bool IsDotaPlusSub { get; set; }
     }
 }

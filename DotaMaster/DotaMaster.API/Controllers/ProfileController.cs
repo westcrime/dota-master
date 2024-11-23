@@ -22,7 +22,7 @@ namespace DotaMaster.API.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> Get()
+        public async Task<IActionResult> GetProfile()
         {
             if (User.Identity == null || !User.Identity.IsAuthenticated)
             {
@@ -36,10 +36,29 @@ namespace DotaMaster.API.Controllers
                 return BadRequest(new { Message = "Steam ID not found in claims" });
             }
 
-            var profile = await _profileService.Get(steamId);
+            var profile = await _profileService.GetProfile(steamId);
             var profileDto = _mapper.Map<ProfileDto>(profile);
             return Ok(profileDto);
         }
 
+        [HttpGet("basic-info")]
+        public async Task<IActionResult> GetBasicInfo()
+        {
+            if (User.Identity == null || !User.Identity.IsAuthenticated)
+            {
+                return Unauthorized(new { Message = "User is not authenticated" });
+            }
+
+            // Получение Steam ID из утверждений
+            var steamId = User.FindFirstValue(ClaimTypes.NameIdentifier).Split('/').Last();
+            if (string.IsNullOrEmpty(steamId))
+            {
+                return BadRequest(new { Message = "Steam ID not found in claims" });
+            }
+
+            var basicInfoModel = await _profileService.GetBasicInfo(steamId);
+            var basicInfoDto = _mapper.Map<BasicInfoDto>(basicInfoModel);
+            return Ok(basicInfoDto);
+        }
     }
 }

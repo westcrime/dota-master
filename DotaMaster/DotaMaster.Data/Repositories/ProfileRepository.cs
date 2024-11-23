@@ -1,4 +1,6 @@
 ﻿using AutoMapper;
+using DotaMaster.Data.Entities;
+using DotaMaster.Data.IdConverters;
 using DotaMaster.Data.ResponseModels;
 using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
@@ -42,6 +44,41 @@ namespace DotaMaster.Data.Repositories
 
             // Формирование результата
             return _mapper.Map<Entities.Profile>(data.Response.Players[0]);
+        }
+
+        public async Task<BasicInfo> GetBasicInfoAsync(string steamId)
+        {
+            var dotaId = SteamIdConverter.SteamIdToDotaId(SteamIdConverter.GetIDFromCommunity(steamId));
+            // URL для получения данных
+            string wlUrl = $"https://api.opendota.com/api/players/{dotaId}/wl";
+            string profileUrl = $"https://api.opendota.com/api/players/{dotaId}";
+
+            // Отправка GET-запроса
+            var wlResponse = await _httpClient.GetAsync(wlUrl);
+            wlResponse.EnsureSuccessStatusCode();
+
+            var profileResponse = await _httpClient.GetAsync(profileUrl);
+            profileResponse.EnsureSuccessStatusCode();
+
+            // Десериализация ответа
+            var wlJsonResponse = await wlResponse.Content.ReadAsStringAsync();
+            var winsLoses = JsonConvert.DeserializeObject<WinsLosesResponse>(wlJsonResponse);
+
+            var profileJsonResponse = await profileResponse.Content.ReadAsStringAsync();
+            var profile = JsonConvert.DeserializeObject<OpenDotaProfileResponse>(profileJsonResponse);
+
+            var basicInfo = new BasicInfo()
+            {
+                DotaId = dotaId,
+                SteamId = steamId,
+                Loses = winsLoses.Loses,
+                Wins = winsLoses.Wins,
+                Rank = profile.Rank,
+                IsDotaPlusSub = profile.moreData.IsDotaPlusSub
+            };
+
+            // Формирование результата
+            return basicInfo;
         }
     }
 }
