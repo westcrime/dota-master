@@ -17,6 +17,7 @@ namespace DotaMaster.Application.MappingProfiles
             CreateMap<Data.Entities.Profile, ProfileModel>();
             CreateMap<Data.Entities.BasicInfo, BasicInfoModel>();
             CreateMap<Data.Entities.Records, RecordsModel>();
+            CreateMap<HeroStat, HeroStatModel> ();
         }
     }
 }

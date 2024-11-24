@@ -80,5 +80,25 @@ namespace DotaMaster.API.Controllers
             var recordsDto = _mapper.Map<RecordsDto>(recordsModel);
             return Ok(recordsDto);
         }
+
+        [HttpGet("recent-hero-stats")]
+        public async Task<IActionResult> GetRecentHeroStats()
+        {
+            if (User.Identity == null || !User.Identity.IsAuthenticated)
+            {
+                return Unauthorized(new { Message = "User is not authenticated" });
+            }
+
+            // Получение Steam ID из утверждений
+            var steamId = User.FindFirstValue(ClaimTypes.NameIdentifier).Split('/').Last();
+            if (string.IsNullOrEmpty(steamId))
+            {
+                return BadRequest(new { Message = "Steam ID not found in claims" });
+            }
+
+            var heroStatModels = await _profileService.GetHeroStats(steamId);
+            var heroStatDtos = _mapper.Map<IEnumerable<HeroStatDto>>(heroStatModels);
+            return Ok(heroStatDtos);
+        }
     }
 }

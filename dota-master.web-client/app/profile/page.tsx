@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { RiLogoutBoxLine } from "react-icons/ri";
 import { Label } from "@/components/ui/label";
 import { RankCard } from "./_components/rankCard";
+import { RecordsCard } from "./_components/recordsCard";
 
 // Mock data - replace with actual API calls
 const playerData = {
@@ -62,7 +63,7 @@ const Profile = () => {
     return (
         <>
 			<div className="flex p-0 m-0 flex-row space-x-4">
-				<RankCard steamUrl={playerData.id}/>
+				<RankCard/>
 
 				<Card className="bg-gray-800 p-6 mb-8">
 					<h3 className="text-2xl font-bold mb-4">Most Played Heroes</h3>
@@ -88,27 +89,7 @@ const Profile = () => {
 				</Card>
 			</div>
 
-			<Card className="bg-gray-800 p-6 mb-8">
-			<h3 className="text-2xl font-bold mb-4">Player Records</h3>
-			<div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-				<div>
-				<p className="font-bold">GPM</p>
-				<p>{playerData.records.gpm}</p>
-				</div>
-				<div>
-				<p className="font-bold">Kills</p>
-				<p>{playerData.records.kills}</p>
-				</div>
-				<div>
-				<p className="font-bold">Assists</p>
-				<p>{playerData.records.assists}</p>
-				</div>
-				<div>
-				<p className="font-bold">Last Hits</p>
-				<p>{playerData.records.lastHits}</p>
-				</div>
-			</div>
-			</Card>
+			<RecordsCard/>
 
 			<Card className="bg-gray-800 p-6">
 			<h3 className="text-2xl font-bold mb-4">Recent Matches</h3>

@@ -3,11 +3,13 @@ using DotaMaster.Data.Entities;
 using DotaMaster.Data.IdConverters;
 using DotaMaster.Data.ResponseModels;
 using DotaMaster.Domain.Exceptions;
+using GraphQL;
 using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http.Headers;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -21,7 +23,7 @@ namespace DotaMaster.Data.Repositories
         private readonly HttpClient _httpClient;
         private readonly IMapper _mapper;
 
-        public ProfileRepository(IConfiguration configuration, HttpClient httpClient, IMapper mapper) 
+        public ProfileRepository(IConfiguration configuration, HttpClient httpClient, IMapper mapper)
         {
             _mapper = mapper;
             _httpClient = httpClient;
@@ -171,6 +173,112 @@ namespace DotaMaster.Data.Repositories
 
             // Формирование результата
             return records;
+        }
+
+        public async Task<IEnumerable<HeroStat>> GetRecentHeroesStatsAsync(string steamId)
+        {
+            // Преобразуем Steam ID в Dota ID
+            string dotaId = SteamIdConverter.SteamIdToDotaId(SteamIdConverter.GetIDFromCommunity(steamId));
+
+            // URL для получения последних матчей
+            string recentMatchesUrl = $"https://api.opendota.com/api/players/{dotaId}/recentMatches";
+
+            // URL для GraphQL запроса
+            string graphqlUrl = "https://api.stratz.com/graphql";
+
+            // Отправка GET-запроса для получения последних матчей
+            var recentMatchesResponse = await _httpClient.GetAsync(recentMatchesUrl);
+
+            // Десериализация ответа с последними матчами
+            var recentMatchesJson = await recentMatchesResponse.Content.ReadAsStringAsync();
+            var recentMatches = JsonConvert.DeserializeObject<RecentMatchIdResponse[]>(recentMatchesJson);
+
+            if (recentMatches == null || recentMatches.Length == 0)
+            {
+                throw new PrivateProfileException($"Profile {steamId} is private!");
+            }
+
+            // GraphQL запрос для получения статистики героев
+            string graphqlQuery = @"
+                query GetUser($userId: Long!, $matchIds: [Long]) {
+                  player(steamAccountId: $userId) {
+                    heroesPerformance(request: {matchIds: $matchIds}) {
+                      heroId
+                      hero {
+                        name
+                      }
+                      matchCount
+                      avgKills
+                      avgDeaths
+                      duration
+                      avgAssists
+                      goldPerMinute
+                      experiencePerMinute
+                      winCount
+                      imp
+                      best
+                      positionScore {
+                        score
+                        matchCount
+                        imp
+                      }
+                    }
+                  }
+                }";
+
+            // Извлекаем список ID матчей
+            var matchIds = recentMatches.Select(match => match.MatchId).ToArray();
+
+            // Формируем тело запроса
+            var requestBody = new
+            {
+                query = graphqlQuery,
+                variables = new { userId = long.Parse(dotaId), matchIds }
+            };
+
+            // Сериализация тела запроса в JSON
+            var jsonRequestBody = JsonConvert.SerializeObject(requestBody);
+
+            // Подготовка тела запроса для отправки
+            var content = new StringContent(jsonRequestBody, Encoding.UTF8, "application/json");
+
+            // Создание HTTP запроса с добавлением заголовка авторизации
+            var request = new HttpRequestMessage(HttpMethod.Post, graphqlUrl)
+            {
+                Content = content
+            };
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _stratzApiKey);
+            request.Headers.Add("User-Agent", "STRATZ_API");
+
+            // Отправка запроса и получение ответа
+            using var response = await _httpClient.SendAsync(request);
+            var responseContent = await response.Content.ReadAsStringAsync();
+
+            // Проверка успешности ответа
+            response.EnsureSuccessStatusCode();
+
+            // Десериализация ответа с данными статистики
+            var heroStatsResponse = JsonConvert.DeserializeObject<HeroStatsResponse>(responseContent);
+
+            // Преобразуем данные статистики в более удобный формат
+            var heroStats = heroStatsResponse.Data.Player.HeroStats;
+            var heroStatList = heroStats.Select(heroStat => new HeroStat
+            {
+                HeroId = heroStat.HeroId,
+                Name = heroStat.Hero.Name,
+                MatchCount = heroStat.MatchCount,
+                WinCount = heroStat.WinCount,
+                AvgAssists = heroStat.AvgAssists,
+                AvgDeaths = heroStat.AvgDeaths,
+                AvgKills = heroStat.AvgKills,
+                AvgGpm = heroStat.Gpm,
+                AvgXpm = heroStat.Xpm,
+                Impact = heroStat.Impact
+            }).ToList();
+
+            // Возвращаем результат
+            return heroStatList;
+
         }
     }
 }

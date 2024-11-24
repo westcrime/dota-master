@@ -5,10 +5,6 @@ import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Label } from "@/components/ui/label";
 
-export interface ProfileData {
-    steamUrl: string;
-}
-
 interface PlayerData {
     rank: string;
     rankImage: string;
@@ -18,7 +14,7 @@ interface PlayerData {
     dotaId: string;
 }
 
-export const RankCard = ({ steamUrl }: ProfileData) => {
+export const RankCard = () => {
     const [playerData, setPlayerData] = useState<PlayerData | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('')
@@ -51,7 +47,7 @@ export const RankCard = ({ steamUrl }: ProfileData) => {
                     loseCount: data.loses,
                     rank: data.rank,
                     isDotaPlusSub: data.isDotaPlusSub,
-                    rankImage: "undef",
+                    rankImage: data.rank,
                     dotaId: data.dotaId
                 });
     
@@ -65,11 +61,11 @@ export const RankCard = ({ steamUrl }: ProfileData) => {
         };
     
         fetchPlayerData();
-    }, [steamUrl]);    
+    }, []);    
 
     if (loading) {
         return (
-            <Card className="bg-gray-800 p-6 px-4 flex space-x-4 w-3/4">
+            <Card className="bg-gray-800 p-8 flex space-x-4 w-1/2">
                 <Skeleton className="h-1/2 w-full bg-gray-600" />
                 <Skeleton className="h-1/2 w-full bg-gray-600" />
             </Card>
@@ -78,15 +74,15 @@ export const RankCard = ({ steamUrl }: ProfileData) => {
 
     if (!playerData) {
         return (
-            <Card className="bg-gray-800 px-4 p-6">
+            <Card className="bg-gray-800 p-8">
                 <p className="text-red-500">{error}</p>
             </Card>
         );
     }
 
     return (
-        <Card className="bg-gray-800 p-6 px-36 flex flex-row justify-between w-3/4">
-            <img src={playerData.rankImage} className="h-30 w-30" />
+        <Card className="bg-gray-800 p-8 flex flex-row justify-around w-1/2">
+            <img src={`ranks/${playerData.rankImage}.webp`} className="h-48 w-48" />
             <div className="flex flex-col space-y-2">
                 <h2 className="text-xl font-bold text-white">Статистика игр</h2>
 
