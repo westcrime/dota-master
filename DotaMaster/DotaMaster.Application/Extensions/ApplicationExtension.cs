@@ -23,6 +23,7 @@ namespace DotaMaster.Application.Extensions
             services.AddRepositories();
 
             services.AddScoped<ProfileService>();
+            services.AddScoped<MatchService>();
 
             // Adding mapping profile
             services.AddAutoMapper(typeof(ApplicationMappingProfile));

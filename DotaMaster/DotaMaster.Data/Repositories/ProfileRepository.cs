@@ -1,7 +1,7 @@
 ﻿using AutoMapper;
 using DotaMaster.Data.Entities;
 using DotaMaster.Data.IdConverters;
-using DotaMaster.Data.ResponseModels;
+using DotaMaster.Data.ResponseModels.ProfileResponses;
 using DotaMaster.Domain.Exceptions;
 using GraphQL;
 using Microsoft.Extensions.Configuration;
@@ -281,9 +281,39 @@ namespace DotaMaster.Data.Repositories
 
         }
 
-        public async Task<IEnumerable<HeroStat>> GetRecentMatchesAsync(string steamId)
+        public async Task<IEnumerable<MatchBasicInfo>> GetMatchesInfoAsync(string steamId, int limit = 15, int offset = 0)
         {
+            // Преобразуем Steam ID в Dota ID
+            string dotaId = SteamIdConverter.SteamIdToDotaId(SteamIdConverter.GetIDFromCommunity(steamId));
 
+            // URL для получения матчей
+            string matchesUrl = $"https://api.opendota.com/api/players/{dotaId}/matches?game_mode=22&limit={limit}&offset={offset}";
+
+            // Отправка GET-запроса для получения матчей
+            var matchesResponse = await _httpClient.GetAsync(matchesUrl);
+
+            // Десериализация ответа с последними матчами
+            var matchesJson = await matchesResponse.Content.ReadAsStringAsync();
+            var matches = JsonConvert.DeserializeObject<MatchBasicInfoResponse[]>(matchesJson);
+
+            if (matches == null || matches.Length == 0)
+            {
+                throw new PrivateProfileException($"Profile {steamId} is private!");
+            }
+
+            var matchBasicInfoList = matches.Select(match => new MatchBasicInfo
+            {
+                MatchId = match.MatchId,
+                HeroId = match.HeroId,
+                IsWin = match.PlayerSlot < 100? match.RadiantWin : !match.RadiantWin,
+                Duration = TimeSpan.FromSeconds(match.Duration),
+                Kills = match.Kills,
+                Deaths = match.Deaths,
+                Assists = match.Assists
+            }).ToList();
+
+            // Возвращаем результат
+            return matchBasicInfoList;
         }
     }
 }

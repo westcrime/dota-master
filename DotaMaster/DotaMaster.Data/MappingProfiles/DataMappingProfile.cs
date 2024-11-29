@@ -1,5 +1,5 @@
 ﻿using AutoMapper;
-using DotaMaster.Data.ResponseModels;
+using DotaMaster.Data.ResponseModels.ProfileResponses;
 using System;
 using System.Collections.Generic;
 using System.Linq;

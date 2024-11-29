@@ -1,13 +1,13 @@
-﻿using Newtonsoft.Json;
+﻿using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace DotaMaster.Data.Entities
+namespace DotaMaster.Data.Contexts
 {
-    public class BasicMatchInfo
+    public class MatchDbContext : DbContext
     {
     }
 }

@@ -18,6 +18,7 @@ namespace DotaMaster.Data.Extensions
 
             // Adding repositories in container
             services.AddScoped<ProfileRepository>();
+            services.AddScoped<MatchRepository>();
 
             // Adding mapping profile
             services.AddAutoMapper(typeof(DataMappingProfile));

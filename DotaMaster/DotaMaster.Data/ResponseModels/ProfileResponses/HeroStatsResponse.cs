@@ -7,7 +7,7 @@ using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 
-namespace DotaMaster.Data.ResponseModels
+namespace DotaMaster.Data.ResponseModels.ProfileResponses
 {
     public class HeroStatsResponse
     {

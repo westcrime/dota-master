@@ -5,14 +5,14 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace DotaMaster.Data.ResponseModels
+namespace DotaMaster.Data.ResponseModels.ProfileResponses
 {
     public class OpenDotaProfileResponse
     {
         [JsonProperty("rank_tier")]
         public string Rank { get; set; }
         [JsonProperty("profile")]
-        public MoreData moreData { get; set; } 
+        public MoreData moreData { get; set; }
 
     }
 

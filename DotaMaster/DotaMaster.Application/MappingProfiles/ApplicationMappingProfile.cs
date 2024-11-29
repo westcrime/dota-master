@@ -18,6 +18,10 @@ namespace DotaMaster.Application.MappingProfiles
             CreateMap<Data.Entities.BasicInfo, BasicInfoModel>();
             CreateMap<Data.Entities.Records, RecordsModel>();
             CreateMap<HeroStat, HeroStatModel> ();
+            CreateMap<MatchBasicInfo, MatchBasicInfoModel>();
+
+            // Match mapping
+            CreateMap<LaningAnalyze, LaningAnalyzeModel>();
         }
     }
 }
