@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 
 namespace DotaMaster.Application.Extensions
 {
-    public static class ServicesExtension
+    public static class ApplicationExtension
     {
         public static IServiceCollection AddServices(this IServiceCollection services)
         {

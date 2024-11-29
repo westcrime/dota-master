@@ -280,5 +280,10 @@ namespace DotaMaster.Data.Repositories
             return heroStatList;
 
         }
+
+        public async Task<IEnumerable<HeroStat>> GetRecentMatchesAsync(string steamId)
+        {
+
+        }
     }
 }

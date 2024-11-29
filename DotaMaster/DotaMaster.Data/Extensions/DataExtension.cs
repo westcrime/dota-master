@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace DotaMaster.Data.Extensions
 {
-    public static class RepositoriesExtension
+    public static class DataExtension
     {
         public static IServiceCollection AddRepositories(this IServiceCollection services)
         {
