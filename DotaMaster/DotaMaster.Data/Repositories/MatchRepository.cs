@@ -31,185 +31,421 @@ namespace DotaMaster.Data.Repositories
             _stratzApiKey = _configuration["StratzApiKey"];
         }
 
-        //public async Task<PickAnalyze> GetPickAnalyzeAsync(int userHeroId, List<int> radiantHeroes, List<int> direHeroes, int rank)
-        //{
-
-        //}
-
-        public async Task<LaningAnalyze> GetLaningAnalyzeAsync(long matchId, string steamId)
+        private async Task<HeroesInMatchInfoResponse> GetInfoAboutHeroesInMatchAsync(long matchId)
         {
-            // Преобразуем Steam ID в Dota ID
-            string dotaId = SteamIdConverter.SteamIdToDotaId(SteamIdConverter.GetIDFromCommunity(steamId));
-
-            // URL для GraphQL запроса
-            string graphqlUrl = "https://api.stratz.com/graphql";
-
-            string additionalInfoQuery = @"query GetUser($matchId: Long!, $dotaId: Long) {
-                  match(id: $matchId) {
-                    players(steamAccountId: $dotaId) {
-                      position
-                      heroId
+            const string GraphqlUrl = "https://api.stratz.com/graphql";
+            const string HeroesInMatchInfoQuery = @"
+                query GetUser($matchId: Long!) {
+                    match(id: $matchId) {
+                        players {
+                            position
+                            heroId
+                            isRadiant
+                        }
+                        rank
                     }
-                    rank
-                  }
                 }";
 
-            // Формируем тело запроса
-            var additionalInfoRequestBody = new
+            // Формирование тела запроса
+            var requestBody = new
             {
-                query = additionalInfoQuery,
-                variables = new 
-                {
-                    dotaId = long.Parse(dotaId),
-                    matchId
-                }
+                query = HeroesInMatchInfoQuery,
+                variables = new { matchId }
             };
 
             // Сериализация тела запроса в JSON
-            var additionalInfoJsonRequestBody = JsonConvert.SerializeObject(additionalInfoRequestBody);
+            string jsonRequestBody = JsonConvert.SerializeObject(requestBody);
 
-            // Подготовка тела запроса для отправки
-            var additionalInfoContent = new StringContent(additionalInfoJsonRequestBody, Encoding.UTF8, "application/json");
-
-            // Создание HTTP запроса с добавлением заголовка авторизации
-            var additionalInfoRequest = new HttpRequestMessage(HttpMethod.Post, graphqlUrl)
+            using var httpRequest = new HttpRequestMessage(HttpMethod.Post, GraphqlUrl)
             {
-                Content = additionalInfoContent
+                Content = new StringContent(jsonRequestBody, Encoding.UTF8, "application/json")
             };
-            additionalInfoRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _stratzApiKey);
-            additionalInfoRequest.Headers.Add("User-Agent", "STRATZ_API");
 
-            // Отправка запроса и получение ответа
-            using var additionalInfoResponse = await _httpClient.SendAsync(additionalInfoRequest);
-            var additionalInfoResponseContent = await additionalInfoResponse.Content.ReadAsStringAsync();
+            // Добавление заголовков
+            httpRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _stratzApiKey);
+            httpRequest.Headers.UserAgent.ParseAdd("STRATZ_API");
+
+            // Отправка запроса
+            using var response = await _httpClient.SendAsync(httpRequest);
 
             // Проверка успешности ответа
-            additionalInfoResponse.EnsureSuccessStatusCode();
+            if (!response.IsSuccessStatusCode)
+            {
+                string errorContent = await response.Content.ReadAsStringAsync();
+                throw new HttpRequestException($"Request failed with status {response.StatusCode}: {errorContent}");
+            }
 
-            // Десериализация ответа с данными статистики
-            var additionalInfo = JsonConvert.DeserializeObject<AdditionalInfoResponse>(additionalInfoResponseContent);
+            // Чтение и десериализация ответа
+            string responseContent = await response.Content.ReadAsStringAsync();
+            var heroesInMatchInfo = JsonConvert.DeserializeObject<HeroesInMatchInfoResponse>(responseContent);
+
+            if (heroesInMatchInfo == null)
+            {
+                throw new InvalidOperationException($"Received null response for match ID {matchId}.");
+            }
+
+            return heroesInMatchInfo;
+        }
+
+        private async Task<AdditionalInfoResponse> GetAdditionalInfoAboutUserFromMatchAsync(long dotaId, long matchId)
+        {
+            const string GraphqlUrl = "https://api.stratz.com/graphql";
+            const string AdditionalInfoQuery = @"
+                query GetUser($matchId: Long!, $dotaId: Long) {
+                    match(id: $matchId) {
+                        players(steamAccountId: $dotaId) {
+                            position
+                            heroId
+                        }
+                        rank
+                    }
+                }";
+
+            // Формирование тела запроса
+            var requestBody = new
+            {
+                query = AdditionalInfoQuery,
+                variables = new { dotaId, matchId }
+            };
+
+            // Сериализация тела запроса в JSON
+            string jsonRequestBody = JsonConvert.SerializeObject(requestBody);
+
+            using var httpRequest = new HttpRequestMessage(HttpMethod.Post, GraphqlUrl)
+            {
+                Content = new StringContent(jsonRequestBody, Encoding.UTF8, "application/json")
+            };
+
+            // Добавление заголовков
+            httpRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _stratzApiKey);
+            httpRequest.Headers.UserAgent.ParseAdd("STRATZ_API");
+
+            // Отправка запроса
+            using var response = await _httpClient.SendAsync(httpRequest);
+
+            // Проверка успешности ответа
+            if (!response.IsSuccessStatusCode)
+            {
+                string errorContent = await response.Content.ReadAsStringAsync();
+                throw new HttpRequestException($"Request failed with status {response.StatusCode}: {errorContent}");
+            }
+
+            // Десериализация ответа
+            string responseContent = await response.Content.ReadAsStringAsync();
+            var additionalInfo = JsonConvert.DeserializeObject<AdditionalInfoResponse>(responseContent);
 
             if (additionalInfo == null)
             {
-                throw new Exception($"Additional info for laning analyze is null for match {matchId}");
+                throw new InvalidOperationException($"Additional info for match ID {matchId} is null.");
             }
 
-            // GraphQL запрос для получения статистики героев
-            string graphqlQuery = @"query GetLaneAnalyze($matchId: Long!, $pos: [MatchPlayerPositionType], $heroId: [Short], $dotaId: Long, $rank: RankBracketBasicEnum) {
+            return additionalInfo;
+        }
+
+        public async Task<MatchInfo> GetGeneralInfoAboutMatchAsync(long matchId)
+        {
+            string GraphqlUrl = "https://api.stratz.com/graphql";
+            const string MatchInfoQuery = @"query GetUser($matchId: Long!) {
               match(id: $matchId) {
-                players(steamAccountId: $dotaId) {
-                  stats {
-                    lastHitsPerMinute
-                    killEvents {
-                      time
-                    }
-                    deathEvents {
-                      time
-                    }
-                    networthPerMinute
-                  }
-                }
-              }
-              heroStats {
-                stats(
-                  heroIds: $heroId
-                  bracketBasicIds: [$rank]
-                  maxTime: 10
-                  positionIds: $pos
-                ) {
+                didRadiantWin
+                rank
+                durationSeconds
+                radiantNetworthLeads
+                radiantExperienceLeads
+                radiantKills
+                direKills
+                players {
+                  heroId
+                  isRadiant
+                  networth
                   kills
                   deaths
                   assists
-                  cs
-                  xp
-                  networth
+                  goldPerMinute
+                  experiencePerMinute
+                  numDenies
+                  numLastHits
+                  imp
+                  item0Id
+                  item1Id
+                  item2Id
+                  item3Id
+                  item4Id
+                  item5Id
+                  backpack0Id
+                  backpack1Id
+                  backpack2Id
                 }
               }
             }";
 
-            var rank = "";
-            if (additionalInfo.Data.Match.Rank <= 0)
+            // Формирование тела запроса
+            var requestBody = new
             {
-                rank = "UNCALIBRATED";
-            } 
-            else if (additionalInfo.Data.Match.Rank > 10 && additionalInfo.Data.Match.Rank < 30)
+                query = MatchInfoQuery,
+                variables = new { matchId }
+            };
+
+            // Сериализация тела запроса в JSON
+            string jsonRequestBody = JsonConvert.SerializeObject(requestBody);
+
+            using var httpRequest = new HttpRequestMessage(HttpMethod.Post, GraphqlUrl)
             {
-                rank = "HERALD_GUARDIAN";
-            }
-            else if (additionalInfo.Data.Match.Rank > 30 && additionalInfo.Data.Match.Rank < 50)
+                Content = new StringContent(jsonRequestBody, Encoding.UTF8, "application/json")
+            };
+
+            // Добавление заголовков
+            httpRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _stratzApiKey);
+            httpRequest.Headers.UserAgent.ParseAdd("STRATZ_API");
+
+            // Отправка запроса
+            using var response = await _httpClient.SendAsync(httpRequest);
+
+            // Проверка успешности ответа
+            if (!response.IsSuccessStatusCode)
             {
-                rank = "CRUSADER_ARCHON";
-            }
-            else if (additionalInfo.Data.Match.Rank > 50 && additionalInfo.Data.Match.Rank < 70)
-            {
-                rank = "LEGEND_ANCIENT";
-            }
-            else if (additionalInfo.Data.Match.Rank > 70 && additionalInfo.Data.Match.Rank < 90)
-            {
-                rank = "DIVINE_IMMORTAL";
+                string errorContent = await response.Content.ReadAsStringAsync();
+                throw new HttpRequestException($"Request failed with status {response.StatusCode}: {errorContent}");
             }
 
-            // Формируем тело запроса
-            var laningInfoRequestBody = new
+            // Десериализация ответа
+            string responseContent = await response.Content.ReadAsStringAsync();
+
+            var matchInfo = JsonConvert.DeserializeObject<GeneralMatchInfoResponse>(responseContent);
+
+            if (matchInfo == null)
+            {
+                throw new InvalidOperationException($"General match info for match ID {matchId} is null.");
+            }
+
+            return _mapper.Map<MatchInfo>(matchInfo.Data.Match);
+        }
+
+        public async Task<PickAnalyze> GetPickAnalyzeAsync(long matchId, string steamId, int take = 125)
+        {
+            if (matchId <= 0)
+                throw new ArgumentException("Match ID must be greater than zero.", nameof(matchId));
+
+            if (string.IsNullOrWhiteSpace(steamId))
+                throw new ArgumentException("Steam ID cannot be null or empty.", nameof(steamId));
+
+            string dotaId = SteamIdConverter.SteamIdToDotaId(SteamIdConverter.GetIDFromCommunity(steamId));
+            var additionalInfo = await GetAdditionalInfoAboutUserFromMatchAsync(long.Parse(dotaId), matchId)
+                ?? throw new InvalidOperationException($"Can't get additional info for match {matchId} for account {dotaId}");
+
+            var (rank, rankBracket) = GetRankInfo(additionalInfo.Data.Match.Rank);
+            var heroId = additionalInfo.Data.Match.Players.First().HeroId;
+            var position = additionalInfo.Data.Match.Players.First().Position;
+
+            string graphqlUrl = "https://api.stratz.com/graphql";
+            string graphqlQuery = @"
+                query GetHeroWinrates($heroId: Short, $heroIds: [Short], $take: Int, $rank: RankBracket, $rankBracket: RankBracketBasicEnum, $pos: MatchPlayerPositionType) {
+                    heroStats {
+                        winWeek(
+                            heroIds: [$heroId]
+                            gameModeIds: [ALL_PICK_RANKED]
+                            bracketIds: [$rank]
+                            positionIds: [$pos]
+                        ) {
+                            matchCount
+                            winCount
+                        }
+                        matchUp(
+                            heroId: $heroId
+                            heroIds: $heroIds
+                            bracketBasicIds: [$rankBracket]
+                            take: $take
+                        ) {
+                            heroId
+                            vs {
+                                heroId1
+                                heroId2
+                                winsAverage
+                            }
+                            with {
+                                heroId1
+                                heroId2
+                                winsAverage
+                            }
+                        }
+                    }
+                }";
+
+            var requestBody = new
+            {
+                query = graphqlQuery,
+                variables = new { heroId, rank, rankBracket, take, pos = position }
+            };
+
+            var winratesInfo = await SendGraphqlRequest<WinratesResponse>(graphqlUrl, requestBody);
+
+            var heroesInMatchInfo = await GetInfoAboutHeroesInMatchAsync(matchId);
+            var userIsRadiant = heroesInMatchInfo.Data.Match.Players.Single(p => p.HeroId == heroId).IsRadiant;
+
+            var alliedHeroes = heroesInMatchInfo.Data.Match.Players
+                .Where(p => p.IsRadiant == userIsRadiant && p.HeroId != heroId)
+                .Select(p => p.HeroId)
+                .ToList();
+
+            var enemyHeroes = heroesInMatchInfo.Data.Match.Players
+                .Where(p => p.IsRadiant != userIsRadiant)
+                .Select(p => p.HeroId)
+                .ToList();
+
+            ValidateHeroCounts(alliedHeroes, enemyHeroes);
+
+            var alliedWinrates = alliedHeroes.Select(ally => new HeroWrInfo
+            {
+                HeroId = ally,
+                Winrate = winratesInfo.Data.HeroStats.MatchUp.First().With.Single(h => h.HeroId2 == ally).WinsAverage
+            }).ToList();
+
+            var enemyWinrates = enemyHeroes.Select(enemy => new HeroWrInfo
+            {
+                HeroId = enemy,
+                Winrate = winratesInfo.Data.HeroStats.MatchUp.First().Vs.Single(h => h.HeroId2 == enemy).WinsAverage
+            }).ToList();
+
+            return new PickAnalyze
+            {
+                HeroWinrate = (double)winratesInfo.Data.HeroStats.WinWeek.Last().WinCount /
+                              winratesInfo.Data.HeroStats.WinWeek.Last().MatchCount,
+                HeroWrWithAlliedHeroes = alliedWinrates,
+                HeroWrWithEnemyHeroes = enemyWinrates
+            };
+        }
+
+        private (string rank, string rankBracket) GetRankInfo(int matchRank)
+        {
+            if (matchRank <= 0)
+                return ("UNCALIBRATED", "UNCALIBRATED");
+
+            return matchRank switch
+            {
+                > 10 and < 20 => ("HERALD", "HERALD_GUARDIAN"),
+                >= 20 and < 30 => ("GUARDIAN", "HERALD_GUARDIAN"),
+                >= 30 and < 40 => ("CRUSADER", "CRUSADER_ARCHON"),
+                >= 40 and < 50 => ("ARCHON", "CRUSADER_ARCHON"),
+                >= 50 and < 60 => ("LEGEND", "LEGEND_ANCIENT"),
+                >= 60 and < 70 => ("ANCIENT", "LEGEND_ANCIENT"),
+                >= 70 and < 80 => ("DIVINE", "DIVINE_IMMORTAL"),
+                >= 80 and < 90 => ("IMMORTAL", "DIVINE_IMMORTAL"),
+                _ => ("UNKNOWN", "UNKNOWN")
+            };
+        }
+
+        private void ValidateHeroCounts(List<int> alliedHeroes, List<int> enemyHeroes)
+        {
+            if (alliedHeroes.Count != 4 || enemyHeroes.Count != 5)
+                throw new InvalidOperationException("Wrong number of allied or enemy heroes.");
+        }
+
+        public async Task<LaningAnalyze> GetLaningAnalyzeAsync(long matchId, string steamId)
+        {
+            string dotaId = SteamIdConverter.SteamIdToDotaId(SteamIdConverter.GetIDFromCommunity(steamId));
+            var additionalInfo = await GetAdditionalInfoAboutUserFromMatchAsync(long.Parse(dotaId), matchId)
+                ?? throw new InvalidOperationException($"Cannot get additional info for match {matchId} for account {dotaId}.");
+
+            var playerInfo = additionalInfo.Data.Match.Players.First()
+                ?? throw new InvalidOperationException("Player information not found in the match data.");
+
+            string rank = GetRank(additionalInfo.Data.Match.Rank);
+
+            string graphqlQuery = @"
+                query GetLaneAnalyze($matchId: Long!, $pos: [MatchPlayerPositionType], $heroId: [Short], $dotaId: Long, $rank: RankBracketBasicEnum) {
+                    match(id: $matchId) {
+                        players(steamAccountId: $dotaId) {
+                            stats {
+                                lastHitsPerMinute
+                                killEvents { time }
+                                deathEvents { time }
+                                networthPerMinute
+                            }
+                        }
+                    }
+                    heroStats {
+                        stats(
+                            heroIds: $heroId
+                            bracketBasicIds: [$rank]
+                            maxTime: 10
+                            positionIds: $pos
+                        ) {
+                            kills
+                            deaths
+                            assists
+                            cs
+                            xp
+                            networth
+                        }
+                    }
+                }";
+
+            var requestBody = new
             {
                 query = graphqlQuery,
                 variables = new
                 {
                     dotaId = long.Parse(dotaId),
                     matchId,
-                    heroId = new[] { additionalInfo.Data.Match.Players.First().HeroId },
+                    heroId = new[] { playerInfo.HeroId },
                     rank,
-                    pos = additionalInfo.Data.Match.Players.First().Position
+                    pos = playerInfo.Position
                 }
             };
 
-            // Сериализация тела запроса в JSON
-            var laningInfoJsonRequestBody = JsonConvert.SerializeObject(laningInfoRequestBody);
+            var laningInfo = await SendGraphqlRequest<LaningResponse>("https://api.stratz.com/graphql", requestBody)
+                ?? throw new InvalidOperationException($"Cannot get laning info for match {matchId}.");
 
-            // Подготовка тела запроса для отправки
-            var laningInfoContent = new StringContent(laningInfoJsonRequestBody, Encoding.UTF8, "application/json");
+            var stats = laningInfo.Data.HeroStats.Stats.First();
+            var playerStats = laningInfo.Data.Match.Players.First().Stats;
 
-            // Создание HTTP запроса с добавлением заголовка авторизации
-            var laningInfoRequest = new HttpRequestMessage(HttpMethod.Post, graphqlUrl)
+            return new LaningAnalyze
             {
-                Content = laningInfoContent
-            };
-            laningInfoRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _stratzApiKey);
-            laningInfoRequest.Headers.Add("User-Agent", "STRATZ_API");
-
-            // Отправка запроса и получение ответа
-            using var laningInfoResponse = await _httpClient.SendAsync(laningInfoRequest);
-            var laningInfoResponseContent = await laningInfoResponse.Content.ReadAsStringAsync();
-
-            // Проверка успешности ответа
-            laningInfoResponse.EnsureSuccessStatusCode();
-
-            // Десериализация ответа с данными статистики
-            var laningInfo = JsonConvert.DeserializeObject<LaningResponse>(laningInfoResponseContent);
-
-            if (laningInfo == null)
-            {
-                throw new Exception($"Can't get laning info for match {matchId}");
-            }
-
-            var laningAnalyze = new LaningAnalyze()
-            {
-                AvgLaningCs = laningInfo.Data.HeroStats.Stats.First().Cs,
-                AvgLaningDeaths = laningInfo.Data.HeroStats.Stats.First().Deaths,
-                AvgLaningKills = laningInfo.Data.HeroStats.Stats.First().Kills,
-                AvgLaningNetworth = laningInfo.Data.HeroStats.Stats.First().Networth,
+                AvgLaningCs = stats.Cs,
+                AvgLaningDeaths = stats.Deaths,
+                AvgLaningKills = stats.Kills,
+                AvgLaningNetworth = stats.Networth,
                 DotaId = dotaId,
-                HeroId = additionalInfo.Data.Match.Players.First().HeroId,
+                HeroId = playerInfo.HeroId,
                 MatchId = matchId.ToString(),
-                Position = additionalInfo.Data.Match.Players.First().Position,
+                Position = playerInfo.Position,
                 Rank = rank,
-                LaningCs = laningInfo.Data.Match.Players.First().Stats.LastHitsPerMinute.Take(10).Sum(),
-                LaningNetworth = laningInfo.Data.Match.Players.First().Stats.NetworthPerMinute[9],
-                LaningDeaths = laningInfo.Data.Match.Players.First().Stats.DeathEvents.Where(d => d.Time < 600).Count(),
-                LaningKills = laningInfo.Data.Match.Players.First().Stats.KillEvents.Where(d => d.Time < 600).Count()
+                LaningCs = playerStats.LastHitsPerMinute.Take(10).Sum(),
+                LaningNetworth = playerStats.NetworthPerMinute[9],
+                LaningDeaths = playerStats.DeathEvents.Count(d => d.Time < 600),
+                LaningKills = playerStats.KillEvents.Count(k => k.Time < 600)
             };
-
-            return laningAnalyze;
         }
+
+        private string GetRank(int matchRank)
+        {
+            return matchRank switch
+            {
+                <= 0 => "UNCALIBRATED",
+                > 10 and < 30 => "HERALD_GUARDIAN",
+                >= 30 and < 50 => "CRUSADER_ARCHON",
+                >= 50 and < 70 => "LEGEND_ANCIENT",
+                >= 70 and < 90 => "DIVINE_IMMORTAL",
+                _ => "UNKNOWN"
+            };
+        }
+
+        private async Task<T> SendGraphqlRequest<T>(string url, object requestBody)
+        {
+            var jsonBody = JsonConvert.SerializeObject(requestBody);
+            var content = new StringContent(jsonBody, Encoding.UTF8, "application/json");
+
+            using var request = new HttpRequestMessage(HttpMethod.Post, url) { Content = content };
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _stratzApiKey);
+            request.Headers.UserAgent.ParseAdd("STRATZ_API");
+
+            using var response = await _httpClient.SendAsync(request);
+            response.EnsureSuccessStatusCode();
+
+            string responseContent = await response.Content.ReadAsStringAsync();
+            return JsonConvert.DeserializeObject<T>(responseContent)
+                   ?? throw new InvalidOperationException("Deserialized response is null.");
+        }
+
     }
 }

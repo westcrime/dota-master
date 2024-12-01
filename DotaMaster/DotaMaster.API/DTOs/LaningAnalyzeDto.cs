@@ -8,10 +8,13 @@
         string DotaId,
         int LaningCs,
         double AvgLaningCs,
+        string? CsAdvice,
         int LaningKills,
         double AvgLaningKills,
         int LaningDeaths,
         double AvgLaningDeaths,
+        string? KdaAdvice,
         int LaningNetworth,
-        double AvgLaningNetworth);
+        double AvgLaningNetworth,
+        string? NetworthAdvice);
 }

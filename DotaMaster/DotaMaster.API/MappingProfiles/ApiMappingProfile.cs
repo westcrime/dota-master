@@ -1,5 +1,6 @@
 ﻿using DotaMaster.API.DTOs;
 using DotaMaster.Application.Models;
+using DotaMaster.Data.Entities;
 
 namespace DotaMaster.API.MappingProfiles
 {
@@ -20,6 +21,13 @@ namespace DotaMaster.API.MappingProfiles
 
             // Match mapping
             CreateMap<LaningAnalyzeModel, LaningAnalyzeDto>();
+            CreateMap<MatchInfoModel, MatchInfoDto>();
+            CreateMap<PlayerPerfomanceModel, PlayerPerfomanceDto>();
+            CreateMap<HeroWrInfoModel, HeroWrInfoDto>();
+            CreateMap<PickAnalyzeModel, PickAnalyzeDto>();
+
+            // Hero mapping
+            CreateMap<HeroModel, HeroDto>();
         }
     }
 }

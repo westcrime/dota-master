@@ -22,6 +22,14 @@ namespace DotaMaster.Application.MappingProfiles
 
             // Match mapping
             CreateMap<LaningAnalyze, LaningAnalyzeModel>();
+            CreateMap<MatchInfo, MatchInfoModel>();
+            CreateMap<PlayerPerfomance, PlayerPerfomanceModel>();
+            CreateMap<HeroWrInfo, HeroWrInfoModel>();
+            CreateMap<PickAnalyze, PickAnalyzeModel>();
+
+            // Hero mapping
+            CreateMap<Hero, HeroModel>();
+
         }
     }
 }

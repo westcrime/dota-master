@@ -1,4 +1,6 @@
 ﻿using AutoMapper;
+using DotaMaster.Data.ResponseModels.HeroResponses;
+using DotaMaster.Data.ResponseModels.MatchResponses;
 using DotaMaster.Data.ResponseModels.ProfileResponses;
 using System;
 using System.Collections.Generic;
@@ -14,7 +16,14 @@ namespace DotaMaster.Data.MappingProfiles
         public DataMappingProfile()
         {
             // Profile mapping
-            CreateMap<Player, Entities.Profile>();
+            CreateMap<ResponseModels.ProfileResponses.Player, Entities.Profile>();
+
+            // Hero mapping
+            CreateMap<HeroResponse, Entities.Hero>();
+
+            // Match mapping 
+            CreateMap<GeneralMatchInfoResponse.MatchInfo, Entities.MatchInfo>();
+            CreateMap<GeneralMatchInfoResponse.Player, Entities.PlayerPerfomance>();
         }
     }
 }
