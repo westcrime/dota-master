@@ -24,6 +24,10 @@ namespace DotaMaster.Data.MappingProfiles
             // Match mapping 
             CreateMap<GeneralMatchInfoResponse.MatchInfo, Entities.MatchInfo>();
             CreateMap<GeneralMatchInfoResponse.Player, Entities.PlayerPerfomance>();
+
+            CreateMap<HeroStatsModel, Entities.AvgHeroPerfomance>();
+            CreateMap<PlayerPerfomancePlayerModel, Entities.HeroPlayerPerfomance>();
+
         }
     }
 }

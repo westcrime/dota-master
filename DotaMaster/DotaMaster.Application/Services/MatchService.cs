@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using DotaMaster.Application.Models;
 using DotaMaster.Data.Repositories;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion.Internal;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -174,8 +175,63 @@ namespace DotaMaster.Application.Services
 
         public async Task<MatchInfoModel> GetMatchInfo(long matchId)
         {
-            var matchInfoModel = await _matchRepository.GetGeneralInfoAboutMatchAsync(matchId);
+            var matchInfoModel = await _matchRepository.GetMatchInfo(matchId);
             return _mapper.Map<MatchInfoModel>(matchInfoModel);
         }
+
+        public async Task<GeneralHeroPerfomanceModel> GetGeneralPerfomance(long matchId, string steamId)
+        {
+
+            var perfomance = await _matchRepository.GetUserPerfomance(steamId, matchId);
+            var perfomanceModel = _mapper.Map<GeneralHeroPerfomanceModel>(perfomance);
+            perfomanceModel.Advice = await GetGeneralPerfomanceAdvice(perfomanceModel);
+            return perfomanceModel;
+        }
+
+        private async Task<string> GetGeneralPerfomanceAdvice(GeneralHeroPerfomanceModel perfomanceModel)
+        {
+            var player = perfomanceModel.PlayerPerfomance;
+            var avg = perfomanceModel.AvgHeroPerfomance;
+
+            var adviceBuilder = new StringBuilder();
+
+            // Анализ фарма (Networth, GPM, CS)
+            double networthDifference = player.Networth - avg.Networth;
+            if (networthDifference > 1000)
+                adviceBuilder.AppendLine("Ваш уровень фарма значительно выше среднего. Используйте это преимущество для активной игры и захвата инициативы.");
+            else if (networthDifference < -1000)
+                adviceBuilder.AppendLine("Ваш уровень фарма ниже среднего. Постарайтесь улучшить контроль карты и эффективность фарма.");
+
+            // Анализ убийств и смертей (Kills, Deaths)
+            if (player.Kills > avg.Kills * 1.5)
+                adviceBuilder.AppendLine("Вы значительно превосходите средний показатель убийств. Продолжайте поддерживать агрессивный стиль игры, но не забывайте о безопасности.");
+            if (player.Deaths > avg.Deaths * 1.5)
+                adviceBuilder.AppendLine("У вас много смертей. Постарайтесь играть осторожнее и улучшить позиционирование в бою.");
+
+            // Анализ поддержки (Assists)
+            if (player.Assists > avg.Assists * 1.5)
+                adviceBuilder.AppendLine("Ваши ассисты превосходят средние значения. Это говорит о хорошем участии в командных боях.");
+            else if (player.Assists < avg.Assists * 0.7)
+                adviceBuilder.AppendLine("Количество ассистов ниже среднего. Постарайтесь активнее участвовать в командных действиях.");
+
+            // Анализ IMP (Impact Score)
+            if (player.Imp > 20)
+                adviceBuilder.AppendLine("Ваш показатель импакта высок. Вы эффективно вносите вклад в успех команды.");
+            else if (player.Imp < 10)
+                adviceBuilder.AppendLine("Ваш показатель импакта низок. Подумайте о более активной игре, чтобы повлиять на исход матча.");
+
+            // Анализ урона и экономических факторов (HeroDamage, GoldFed, XpFed)
+            if (avg.HeroDamage > 0 && player.Networth > avg.Networth * 1.2)
+                adviceBuilder.AppendLine("Ваш уровень урона соответствует высокому показателю экономики. Старайтесь поддерживать давление на врага.");
+            if (avg.GoldFed > 0 && avg.XpFed > 0 && player.Deaths > avg.Deaths * 1.5)
+                adviceBuilder.AppendLine("Вы отдаёте врагам много золота и опыта. Постарайтесь уменьшить количество смертей.");
+
+            // Завершающий вывод
+            if (adviceBuilder.Length == 0)
+                adviceBuilder.AppendLine("Ваши показатели соответствуют средним значениям. Продолжайте играть стабильно и поддерживать команду.");
+
+            return adviceBuilder.ToString();
+        }
+
     }
 }

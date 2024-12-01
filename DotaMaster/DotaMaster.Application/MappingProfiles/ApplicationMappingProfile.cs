@@ -27,6 +27,10 @@ namespace DotaMaster.Application.MappingProfiles
             CreateMap<HeroWrInfo, HeroWrInfoModel>();
             CreateMap<PickAnalyze, PickAnalyzeModel>();
 
+            CreateMap<HeroPlayerPerfomance, HeroPlayerPerfomanceModel>();
+            CreateMap<AvgHeroPerfomance, AvgHeroPerfomanceModel>();
+            CreateMap<GeneralHeroPerfomance, GeneralHeroPerfomanceModel>();
+
             // Hero mapping
             CreateMap<Hero, HeroModel>();
 

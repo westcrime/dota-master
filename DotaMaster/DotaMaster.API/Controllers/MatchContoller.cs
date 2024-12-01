@@ -77,5 +77,24 @@ namespace DotaMaster.API.Controllers
             var matchInfo = _mapper.Map<MatchInfoDto>(await _matchService.GetMatchInfo(long.Parse(matchId)));
             return Ok(matchInfo);
         }
+
+        [HttpGet("perfomance")]
+        public async Task<IActionResult> GetMatchPerfomance([FromQuery] string matchId)
+        {
+            if (User.Identity == null || !User.Identity.IsAuthenticated)
+            {
+                return Unauthorized(new { Message = "User is not authenticated" });
+            }
+
+            // Получение Steam ID из утверждений
+            var steamId = User.FindFirstValue(ClaimTypes.NameIdentifier).Split('/').Last();
+            if (string.IsNullOrEmpty(steamId))
+            {
+                return BadRequest(new { Message = "Steam ID not found in claims" });
+            }
+
+            var perfomance = _mapper.Map<GeneralHeroPerfomanceDto>(await _matchService.GetGeneralPerfomance(long.Parse(matchId), steamId));
+            return Ok(perfomance);
+        }
     }
 }

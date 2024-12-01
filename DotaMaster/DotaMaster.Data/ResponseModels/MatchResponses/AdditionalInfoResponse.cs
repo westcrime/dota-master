@@ -26,6 +26,8 @@ namespace DotaMaster.Data.ResponseModels.MatchResponses
 
         [JsonPropertyName("rank")]
         public int Rank { get; set; }
+        [JsonPropertyName("durationSeconds")]
+        public int DurationSeconds { get; set; }
     }
 
     public class Player

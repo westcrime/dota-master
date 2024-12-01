@@ -10,6 +10,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http.Headers;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace DotaMaster.Data.Repositories
@@ -31,7 +32,7 @@ namespace DotaMaster.Data.Repositories
             _stratzApiKey = _configuration["StratzApiKey"];
         }
 
-        private async Task<HeroesInMatchInfoResponse> GetInfoAboutHeroesInMatchAsync(long matchId)
+        private async Task<HeroesInMatchInfoResponse> GetHeroesInMatch(long matchId)
         {
             const string GraphqlUrl = "https://api.stratz.com/graphql";
             const string HeroesInMatchInfoQuery = @"
@@ -87,7 +88,7 @@ namespace DotaMaster.Data.Repositories
             return heroesInMatchInfo;
         }
 
-        private async Task<AdditionalInfoResponse> GetAdditionalInfoAboutUserFromMatchAsync(long dotaId, long matchId)
+        private async Task<AdditionalInfoResponse> GetInfoAboutUserInMatch(long dotaId, long matchId)
         {
             const string GraphqlUrl = "https://api.stratz.com/graphql";
             const string AdditionalInfoQuery = @"
@@ -98,6 +99,7 @@ namespace DotaMaster.Data.Repositories
                             heroId
                         }
                         rank
+                        durationSeconds
                     }
                 }";
 
@@ -142,7 +144,129 @@ namespace DotaMaster.Data.Repositories
             return additionalInfo;
         }
 
-        public async Task<MatchInfo> GetGeneralInfoAboutMatchAsync(long matchId)
+        private async Task<AvgHeroPerfomanceResponse> GetAvgHeroPerfomance(int duration, int heroId, string rankBracket, string pos)
+        {
+            const string GraphqlUrl = "https://api.stratz.com/graphql";
+            const string AdditionalInfoQuery = @"query GetStats($duration: Int, $heroId: Short, $rankBracket: RankBracketBasicEnum, $pos: MatchPlayerPositionType) {
+                  heroStats {
+                    stats(
+                      maxTime: $duration
+                      heroIds: [$heroId]
+                      bracketBasicIds: [$rankBracket]
+                      positionIds: [$pos]
+                    ) {
+                      topCore
+                      topSupport
+                      kills
+                      deaths
+                      assists
+                      networth
+                      xp
+                      cs
+                      heroDamage
+                      goldFed
+                      xpFed
+                    }
+                  }
+                }";
+
+            // Формирование тела запроса
+            var requestBody = new
+            {
+                query = AdditionalInfoQuery,
+                variables = new { duration, heroId, rankBracket, pos }
+            };
+
+            // Сериализация тела запроса в JSON
+            string jsonRequestBody = JsonConvert.SerializeObject(requestBody);
+
+            using var httpRequest = new HttpRequestMessage(HttpMethod.Post, GraphqlUrl)
+            {
+                Content = new StringContent(jsonRequestBody, Encoding.UTF8, "application/json")
+            };
+
+            // Добавление заголовков
+            httpRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _stratzApiKey);
+            httpRequest.Headers.UserAgent.ParseAdd("STRATZ_API");
+
+            // Отправка запроса
+            using var response = await _httpClient.SendAsync(httpRequest);
+
+            // Проверка успешности ответа
+            if (!response.IsSuccessStatusCode)
+            {
+                string errorContent = await response.Content.ReadAsStringAsync();
+                throw new HttpRequestException($"Request failed with status {response.StatusCode}: {errorContent}");
+            }
+
+            // Десериализация ответа
+            string responseContent = await response.Content.ReadAsStringAsync();
+            var additionalInfo = JsonConvert.DeserializeObject<AvgHeroPerfomanceResponse>(responseContent);
+
+            if (additionalInfo == null)
+            {
+                throw new InvalidOperationException($"Additional info for hero ID {heroId} is null.");
+            }
+
+            return additionalInfo;
+        }
+
+        public async Task<GeneralHeroPerfomance> GetUserPerfomance(string steamId, long matchId)
+        {
+            if (matchId <= 0)
+                throw new ArgumentException("Match ID must be greater than zero.", nameof(matchId));
+
+            if (string.IsNullOrWhiteSpace(steamId))
+                throw new ArgumentException("Steam ID cannot be null or empty.", nameof(steamId));
+
+            string dotaId = SteamIdConverter.SteamIdToDotaId(SteamIdConverter.GetIDFromCommunity(steamId));
+            var additionalInfo = await GetInfoAboutUserInMatch(long.Parse(dotaId), matchId)
+                ?? throw new InvalidOperationException($"Can't get additional info for match {matchId} for account {dotaId}");
+
+            var (rank, rankBracket) = GetRankInfo(additionalInfo.Data.Match.Rank);
+            var duration = additionalInfo.Data.Match.DurationSeconds / 60.0;
+            var heroId = additionalInfo.Data.Match.Players.First().HeroId;
+            var position = additionalInfo.Data.Match.Players.First().Position;
+
+            var avgHeroPerfomance = await GetAvgHeroPerfomance((int)duration, heroId, rankBracket, position);
+
+            string graphqlUrl = "https://api.stratz.com/graphql";
+            string graphqlQuery = @"
+                query GetUser($matchId: Long!, $userId: Long!) {
+                  match(id: $matchId) {
+                    players(steamAccountId: $userId) {
+                      heroId
+                      isRadiant
+                      networth
+                      kills
+                      deaths
+                      assists
+                      goldPerMinute
+                      experiencePerMinute
+                      numDenies
+                      numLastHits
+                      imp
+                    }
+                  }
+                }";
+
+            var requestBody = new
+            {
+                query = graphqlQuery,
+                variables = new { matchId, userId = long.Parse(dotaId) }
+            };
+
+            var perfomanceInfo = await SendGraphqlRequest<PerfomanceResponse>(graphqlUrl, requestBody);
+
+            var generalHeroPerfomance = new GeneralHeroPerfomance()
+            {
+                AvgHeroPerfomance = _mapper.Map<AvgHeroPerfomance>(avgHeroPerfomance.Data.HeroStats.Stats.First()),
+                PlayerPerfomance = _mapper.Map<HeroPlayerPerfomance>(perfomanceInfo.Data.Match.Players.First())
+            };
+            return generalHeroPerfomance;
+        }
+
+        public async Task<MatchInfo> GetMatchInfo(long matchId)
         {
             string GraphqlUrl = "https://api.stratz.com/graphql";
             const string MatchInfoQuery = @"query GetUser($matchId: Long!) {
@@ -230,7 +354,7 @@ namespace DotaMaster.Data.Repositories
                 throw new ArgumentException("Steam ID cannot be null or empty.", nameof(steamId));
 
             string dotaId = SteamIdConverter.SteamIdToDotaId(SteamIdConverter.GetIDFromCommunity(steamId));
-            var additionalInfo = await GetAdditionalInfoAboutUserFromMatchAsync(long.Parse(dotaId), matchId)
+            var additionalInfo = await GetInfoAboutUserInMatch(long.Parse(dotaId), matchId)
                 ?? throw new InvalidOperationException($"Can't get additional info for match {matchId} for account {dotaId}");
 
             var (rank, rankBracket) = GetRankInfo(additionalInfo.Data.Match.Rank);
@@ -279,7 +403,7 @@ namespace DotaMaster.Data.Repositories
 
             var winratesInfo = await SendGraphqlRequest<WinratesResponse>(graphqlUrl, requestBody);
 
-            var heroesInMatchInfo = await GetInfoAboutHeroesInMatchAsync(matchId);
+            var heroesInMatchInfo = await GetHeroesInMatch(matchId);
             var userIsRadiant = heroesInMatchInfo.Data.Match.Players.Single(p => p.HeroId == heroId).IsRadiant;
 
             var alliedHeroes = heroesInMatchInfo.Data.Match.Players
@@ -343,7 +467,7 @@ namespace DotaMaster.Data.Repositories
         public async Task<LaningAnalyze> GetLaningAnalyzeAsync(long matchId, string steamId)
         {
             string dotaId = SteamIdConverter.SteamIdToDotaId(SteamIdConverter.GetIDFromCommunity(steamId));
-            var additionalInfo = await GetAdditionalInfoAboutUserFromMatchAsync(long.Parse(dotaId), matchId)
+            var additionalInfo = await GetInfoAboutUserInMatch(long.Parse(dotaId), matchId)
                 ?? throw new InvalidOperationException($"Cannot get additional info for match {matchId} for account {dotaId}.");
 
             var playerInfo = additionalInfo.Data.Match.Players.First()
