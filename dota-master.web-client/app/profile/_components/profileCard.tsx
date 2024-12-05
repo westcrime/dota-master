@@ -26,12 +26,12 @@ export const ProfileCard = ({ steamUrl }: ProfileData) => {
         const fetchPlayerData = async () => {
             try {
                 const url = `${process.env.NEXT_PUBLIC_BACKEND_DOMAIN}/profile`;
-                console.log(`Fetching data from: ${url}`); // Лог URL запроса
+                console.log(`[ProfileCard] - Fetching data from: ${url}`); // Лог URL запроса
                 const response = await fetch(url, {
                     method: 'GET',
                     credentials: 'include'
                 });
-                console.log(`Response status: ${response.status}`); // Лог статуса ответа
+                console.log(`[ProfileCard] - Response status: ${response.status}`); // Лог статуса ответа
     
                 if (!response.ok) {
                     const errorData = await response.json(); // Получаем подробности ошибки
@@ -40,7 +40,7 @@ export const ProfileCard = ({ steamUrl }: ProfileData) => {
                 }   
                 
                 const data = await response.json();
-                console.log("Fetched data:", data); // Лог данных ответа
+                console.log("[ProfileCard] - Fetched data:", data); // Лог данных ответа
                 setPlayerData({
                     nickname: data.username,
                     id: data.steamId,

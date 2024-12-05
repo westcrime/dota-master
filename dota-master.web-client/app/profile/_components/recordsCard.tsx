@@ -44,7 +44,6 @@ export const RecordsCard = () => {
 
     useEffect(() => {
         const fetchRecordsData = async () => {
-            setLoading(true);
             console.log("Starting fetchRecordsData..."); // Лог начала вызова
     
             try {
@@ -100,7 +99,6 @@ export const RecordsCard = () => {
     }, []);  
 
     useEffect(() => {
-        setLoading(true);
         if (recordsData) {
             console.log(recordsData); // Теперь данные обновлены
             
@@ -121,13 +119,12 @@ export const RecordsCard = () => {
 
             console.log("Player data updated successfully.");
         }
-        setLoading(false);
     }, [recordsData]);
 
     if (loading) {
         return (
-            <Card className="bg-gray-800 p-8 flex space-x-4 w-1/2">
-                <Skeleton className="w-160 h-80 bg-gray-600" />
+            <Card className="bg-gray-800 p-8 flex space-x-4 w-full">
+                <Skeleton className="h-96 w-full bg-gray-600" />
             </Card>
         );
     }
@@ -141,7 +138,7 @@ export const RecordsCard = () => {
     }
 
     return (
-        <Card className="bg-gray-800 p-8 flex flex-col space-y-4 w-1/2">
+        <Card className="bg-gray-800 p-8 flex flex-col space-y-4 w-full">
             <h2 className="text-xl font-bold text-white mb-4">Рекорды</h2>
             <div className="grid grid-cols-2 gap-4">
                 {elements?.map((item, index) => (

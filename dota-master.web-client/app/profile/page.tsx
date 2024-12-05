@@ -12,6 +12,7 @@ import { RiLogoutBoxLine } from "react-icons/ri";
 import { Label } from "@/components/ui/label";
 import { RankCard } from "./_components/rankCard";
 import { RecordsCard } from "./_components/recordsCard";
+import { RecentHeroesCard } from "./_components/recentHeroesCard";
 
 // Mock data - replace with actual API calls
 const playerData = {
@@ -63,33 +64,14 @@ const Profile = () => {
     return (
         <>
 			<div className="flex p-0 m-0 flex-row space-x-4">
-				<RankCard/>
+				<div className="flex p-0 m-0 flex-col space-y-4 w-1/2">
+					<RankCard/>
 
-				<Card className="bg-gray-800 p-6 mb-8">
-					<h3 className="text-2xl font-bold mb-4">Most Played Heroes</h3>
-					<div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-						{playerData.topHeroes.map((hero, index) => (
-						<div key={index} className="text-center">
-							<img
-							src={hero.image}
-							alt={hero.name}
-							className="mx-auto mb-2 cursor-pointer"
-							onClick={() => setExpandedHero(expandedHero === index ? null : index)}
-							/>
-							<p>{hero.name}</p>
-							{expandedHero === index && (
-							<div className="mt-2">
-								<p>Games: {hero.gamesPlayed}</p>
-								<p>Winrate: {hero.winrate}%</p>
-							</div>
-							)}
-						</div>
-						))}
-					</div>
-				</Card>
+					<RecordsCard/>
+				</div>
+				
+				<RecentHeroesCard/>
 			</div>
-
-			<RecordsCard/>
 
 			<Card className="bg-gray-800 p-6">
 			<h3 className="text-2xl font-bold mb-4">Recent Matches</h3>

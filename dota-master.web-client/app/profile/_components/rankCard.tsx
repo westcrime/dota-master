@@ -21,17 +21,17 @@ export const RankCard = () => {
 
     useEffect(() => {
         const fetchPlayerData = async () => {
-            console.log("Starting fetchPlayerData..."); // Лог начала вызова
+            console.log("[RankCard] - Starting fetchPlayerData..."); // Лог начала вызова
     
             try {
                 const url = `${process.env.NEXT_PUBLIC_BACKEND_DOMAIN}/profile/basic-info`;
-                console.log(`Fetching data from: ${url}`); // Лог URL запроса
+                console.log(`[RankCard] - Fetching data from: ${url}`); // Лог URL запроса
                 
                 const response = await fetch(url, {
                     method: 'GET',
                     credentials: 'include'
                 });
-                console.log(`Response status: ${response.status}`); // Лог статуса ответа
+                console.log(`[RankCard] - Response status: ${response.status}`); // Лог статуса ответа
     
                 if (!response.ok) {
                     const errorData = await response.json(); // Получаем подробности ошибки
@@ -40,7 +40,7 @@ export const RankCard = () => {
                 }                
                 
                 const data = await response.json();
-                console.log("Fetched data:", data); // Лог данных ответа
+                console.log("[RankCard] - Fetched data:", data); // Лог данных ответа
                 
                 setPlayerData({
                     winCount: data.wins,
@@ -51,12 +51,12 @@ export const RankCard = () => {
                     dotaId: data.dotaId
                 });
     
-                console.log("Player data updated successfully.");
+                console.log("[RankCard] - Player data updated successfully.");
             } catch (error) {
                 console.error("Error during fetchPlayerData:", error); // Лог ошибок
             } finally {
                 setLoading(false);
-                console.log("Loading state set to false."); // Лог завершения загрузки
+                console.log("[RankCard] - Loading state set to false."); // Лог завершения загрузки
             }
         };
     
@@ -65,7 +65,7 @@ export const RankCard = () => {
 
     if (loading) {
         return (
-            <Card className="bg-gray-800 p-8 flex space-x-4 w-1/2">
+            <Card className="bg-gray-800 p-8 flex space-x-4 w-full">
                 <Skeleton className="h-1/2 w-full bg-gray-600" />
                 <Skeleton className="h-1/2 w-full bg-gray-600" />
             </Card>
@@ -81,7 +81,7 @@ export const RankCard = () => {
     }
 
     return (
-        <Card className="bg-gray-800 p-8 flex flex-row justify-around w-1/2">
+        <Card className="bg-gray-800 p-8 flex flex-row justify-around w-full">
             <img src={`ranks/${playerData.rankImage}.webp`} className="h-48 w-48" />
             <div className="flex flex-col space-y-2">
                 <h2 className="text-xl font-bold text-white">Статистика игр</h2>
