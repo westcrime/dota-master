@@ -34,6 +34,8 @@ namespace DotaMaster.Application.MappingProfiles
             // Hero mapping
             CreateMap<Hero, HeroModel>();
 
+            // Item mapping
+            CreateMap<Item, ItemModel>();
         }
     }
 }

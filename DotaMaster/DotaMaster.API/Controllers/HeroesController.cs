@@ -6,21 +6,21 @@ using Microsoft.AspNetCore.Mvc;
 namespace DotaMaster.API.Controllers
 {
     [ApiController]
-    [Route("hero")]
-    public class HeroController : ControllerBase
+    [Route("heroes")]
+    public class HeroesController : ControllerBase
     {
         private readonly HeroService _heroService;
-        private readonly ILogger<HeroController> _logger;
+        private readonly ILogger<HeroesController> _logger;
         private readonly IMapper _mapper;
 
-        public HeroController(HeroService heroService, ILogger<HeroController> logger, IMapper mapper)
+        public HeroesController(HeroService heroService, ILogger<HeroesController> logger, IMapper mapper)
         {
             _heroService = heroService;
             _logger = logger;
             _mapper = mapper;
         }
 
-        [HttpGet("heroes-info")]
+        [HttpGet]
         public async Task<ActionResult> GetHeroesInfo()
         {
             var heroesModel = await _heroService.GetHeroesInfo();

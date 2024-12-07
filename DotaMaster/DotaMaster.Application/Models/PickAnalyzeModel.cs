@@ -9,6 +9,7 @@ namespace DotaMaster.Application.Models
 {
     public record PickAnalyzeModel
     {
+        public int HeroId { get; set; }
         public double HeroWinrate { get; set; }
         public List<HeroWrInfoModel> HeroWrWithAlliedHeroes { get; set; }
         public List<HeroWrInfoModel> HeroWrWithEnemyHeroes { get; set; }

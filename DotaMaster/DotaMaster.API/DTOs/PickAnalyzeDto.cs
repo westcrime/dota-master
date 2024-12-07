@@ -2,7 +2,8 @@
 
 namespace DotaMaster.API.DTOs
 {
-    public record PickAnalyzeDto(double HeroWinrate,
+    public record PickAnalyzeDto(int HeroId, 
+         double HeroWinrate,
          List<HeroWrInfoDto> HeroWrWithAlliedHeroes,
          List<HeroWrInfoDto> HeroWrWithEnemyHeroes,
          string? PickAdvice

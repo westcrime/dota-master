@@ -25,6 +25,7 @@ namespace DotaMaster.Application.Extensions
             services.AddScoped<ProfileService>();
             services.AddScoped<MatchService>();
             services.AddScoped<HeroService>();
+            services.AddScoped<ItemService>();
 
             // Adding mapping profile
             services.AddAutoMapper(typeof(ApplicationMappingProfile));

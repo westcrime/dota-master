@@ -74,7 +74,7 @@ export const RecentHeroesCard: React.FC = () => {
                 const data = await response.json();
                 const recentHeroesData: RecentHeroesStats[] = data.map((hero: { name: string; }) => ({
                     ...hero,
-                    heroPortraitUrl: `${process.env.NEXT_PUBLIC_HERO_PORTRAITS_DOMAIN}/${hero.name.replace("npc_dota_hero_", "")}`
+                    heroPortraitUrl: `${process.env.NEXT_PUBLIC_HERO_PORTRAITS_DOMAIN}/${hero.name.replace("npc_dota_hero_", "")}.png`
                 }));
 
                 setRecentHeroesStats(recentHeroesData);
@@ -150,7 +150,7 @@ export const RecentHeroesCard: React.FC = () => {
                             {recentHeroesStats.map(hero => (
                                 <li key={hero.heroId} className="flex items-center space-x-4 bg-gray-700 p-4 rounded-lg">
                                     <Avatar className="h-12 w-12">
-                                        <AvatarImage src={hero.heroPortraitUrl} alt={hero.name} />
+                                        <AvatarImage src={hero.heroPortraitUrl} alt={hero.name} className="object-cover" />
                                         <AvatarFallback>{hero.name.charAt(0)}</AvatarFallback>
                                     </Avatar>
                                     <div>
