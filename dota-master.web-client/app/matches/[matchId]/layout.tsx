@@ -1,5 +1,5 @@
 import { Card } from "@/components/ui/card";
-import { ProfileCard } from "./_components/profileCard";
+import { ProfileCard } from "../../profile/_components/profileCard";
 import Logo from "@/components/logo";
 import {
     DropdownMenu,

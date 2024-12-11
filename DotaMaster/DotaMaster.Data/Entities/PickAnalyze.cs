@@ -8,6 +8,7 @@ namespace DotaMaster.Data.Entities
 {
     public class PickAnalyze
     {
+        public int HeroId { get; set; }
         public double HeroWinrate { get; set; }
         public List<HeroWrInfo> HeroWrWithAlliedHeroes { get; set; }
         public List<HeroWrInfo> HeroWrWithEnemyHeroes { get; set; }

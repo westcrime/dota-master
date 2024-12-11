@@ -7,14 +7,14 @@ using System.Security.Claims;
 namespace DotaMaster.API.Controllers
 {
     [ApiController]
-    [Route("match")]
-    public class MatchContoller : ControllerBase
+    [Route("matches")]
+    public class MatchesContoller : ControllerBase
     {
         private readonly MatchService _matchService;
-        private readonly ILogger<MatchContoller> _logger;
+        private readonly ILogger<MatchesContoller> _logger;
         private readonly IMapper _mapper;
 
-        public MatchContoller(MatchService matchService, ILogger<MatchContoller> logger, IMapper mapper)
+        public MatchesContoller(MatchService matchService, ILogger<MatchesContoller> logger, IMapper mapper)
         {
             _mapper = mapper;
             _matchService = matchService;

@@ -32,6 +32,9 @@ namespace DotaMaster.API.MappingProfiles
 
             // Hero mapping
             CreateMap<HeroModel, HeroDto>();
+
+            // Item mapping
+            CreateMap<ItemModel, ItemDto>();
         }
     }
 }

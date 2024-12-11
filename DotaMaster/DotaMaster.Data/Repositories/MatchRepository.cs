@@ -432,6 +432,7 @@ namespace DotaMaster.Data.Repositories
 
             return new PickAnalyze
             {
+                HeroId = heroId,
                 HeroWinrate = (double)winratesInfo.Data.HeroStats.WinWeek.Last().WinCount /
                               winratesInfo.Data.HeroStats.WinWeek.Last().MatchCount,
                 HeroWrWithAlliedHeroes = alliedWinrates,

@@ -20,6 +20,7 @@ namespace DotaMaster.Data.Extensions
             services.AddScoped<ProfileRepository>();
             services.AddScoped<MatchRepository>();
             services.AddScoped<HeroRepository>();
+            services.AddScoped<ItemRepository>();
 
             // Adding mapping profile
             services.AddAutoMapper(typeof(DataMappingProfile));
