@@ -1,17 +1,14 @@
 ﻿using AutoMapper;
 using DotaMaster.Data.Entities;
+using DotaMaster.Data.Entities.Profile;
 using DotaMaster.Data.IdConverters;
 using DotaMaster.Data.ResponseModels.ProfileResponses;
 using DotaMaster.Domain.Exceptions;
-using GraphQL;
 using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.Linq;
+using Newtonsoft.Json.Linq;
 using System.Net.Http.Headers;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace DotaMaster.Data.Repositories
 {
@@ -28,30 +25,34 @@ namespace DotaMaster.Data.Repositories
             _mapper = mapper;
             _httpClient = httpClient;
             _configuration = configuration;
-            _steamApiKey = _configuration["Steam:ApiKey"];
-            _stratzApiKey = _configuration["StratzApiKey"];
+            _steamApiKey = _configuration["Steam:ApiKey"]
+                ?? throw new ArgumentNullException("Steam api key is null!");
+            _stratzApiKey = _configuration["StratzApiKey"]
+                ?? throw new ArgumentNullException("Stratz api key is null!"); ;
         }
 
-        public async Task<Entities.Profile> GetSteamUserProfileAsync(string steamId)
+        public async Task<SteamProfile> GetSteamUserProfileAsync(string steamId)
         {
-            // URL для получения данных
             string url = $"https://api.steampowered.com/ISteamUser/GetPlayerSummaries/v2/?key={_steamApiKey}&steamids={steamId}";
-
             var dotaId = SteamIdConverter.SteamIdToDotaId(SteamIdConverter.GetIDFromCommunity(steamId));
-
-            // Отправка GET-запроса
             var response = await _httpClient.GetAsync(url);
             response.EnsureSuccessStatusCode();
-
-            // Десериализация ответа
             var jsonResponse = await response.Content.ReadAsStringAsync();
-            var data = JsonConvert.DeserializeObject<ProfileResponse>(jsonResponse);
-
-            var profile = _mapper.Map<Entities.Profile>(data.Response.Players[0]);
-            profile.DotaId = dotaId;
-
-            // Формирование результата
-            return profile;
+            var parsed = JsonConvert.DeserializeObject<Dictionary<string, object>>(jsonResponse)
+                ?? throw new ArgumentNullException("Can not parse GetSteamUserProfileAsync response");
+            var player = ((((JObject)parsed["response"]
+                ?? throw new ArgumentNullException("Can not parse GetSteamUserProfileAsync response: 'response' is null"))
+                ["players"] 
+                ?? throw new ArgumentNullException("Can not parse GetSteamUserProfileAsync response: 'players' is null"))
+                .ToObject<Player[]>()
+                ?? throw new ArgumentNullException("Can not parse GetSteamUserProfileAsync response: can not parse to 'Player'"))[0];
+            return new SteamProfile()
+            {
+                AvatarUrl = player.AvatarUrl,
+                DotaId = dotaId,
+                SteamId = player.SteamId,
+                Username = player.Username
+            };
         }
 
         public async Task<BasicInfo> GetBasicInfoAsync(string steamId)

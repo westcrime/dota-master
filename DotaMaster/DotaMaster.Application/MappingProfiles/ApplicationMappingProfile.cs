@@ -1,5 +1,6 @@
 ﻿using DotaMaster.Application.Models;
 using DotaMaster.Data.Entities;
+using DotaMaster.Data.Entities.Profile;
 using DotaMaster.Data.ResponseModels;
 using System;
 using System.Collections.Generic;
@@ -14,8 +15,8 @@ namespace DotaMaster.Application.MappingProfiles
         public ApplicationMappingProfile()
         {
             // Profile mapping
-            CreateMap<Data.Entities.Profile, ProfileModel>();
-            CreateMap<Data.Entities.BasicInfo, BasicInfoModel>();
+            CreateMap<SteamProfile, ProfileModel>();
+            CreateMap<BasicInfo, BasicInfoModel>();
             CreateMap<Data.Entities.Records, RecordsModel>();
             CreateMap<HeroStat, HeroStatModel> ();
             CreateMap<MatchBasicInfo, MatchBasicInfoModel>();
