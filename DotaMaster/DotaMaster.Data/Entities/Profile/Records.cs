@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace DotaMaster.Data.Entities
+﻿namespace DotaMaster.Data.Entities.Profile
 {
     public class Records
     {
@@ -14,8 +8,8 @@ namespace DotaMaster.Data.Entities
         public long AvgDeaths { get; set; }
         public long Assists { get; set; }
         public long AvgAssists { get; set; }
-        public long Gold {  get; set; }
-        public long AvgGold {  get; set; }
+        public long Gold { get; set; }
+        public long AvgGold { get; set; }
         public long Xp { get; set; }
         public long AvgXp { get; set; }
         public long LastHits { get; set; }

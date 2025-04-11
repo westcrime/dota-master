@@ -3,7 +3,7 @@
     public class HeroStat
     {
         public int HeroId { get; set; }
-        public string Name { get; set; }
+        public required string Name { get; set; }
         public int MatchCount { get; set; }
         public int WinCount { get; set; }
         public double AvgKills { get; set; }

@@ -1,6 +1,4 @@
-﻿using AutoMapper;
-using DotaMaster.Data.Entities;
-using DotaMaster.Data.Entities.Profile;
+﻿using DotaMaster.Data.Entities.Profile;
 using DotaMaster.Data.IdConverters;
 using DotaMaster.Data.ResponseModels.ProfileResponses;
 using DotaMaster.Domain.Exceptions;
@@ -18,17 +16,17 @@ namespace DotaMaster.Data.Repositories
         private readonly string _stratzApiKey;
         private readonly IConfiguration _configuration;
         private readonly HttpClient _httpClient;
-        private readonly IMapper _mapper;
+        private const string _openDotaUrl = "https://api.opendota.com/api";
+        private const string _stratzGraphqlUrl = "https://api.stratz.com/graphql";
 
-        public ProfileRepository(IConfiguration configuration, HttpClient httpClient, IMapper mapper)
+        public ProfileRepository(IConfiguration configuration, HttpClient httpClient)
         {
-            _mapper = mapper;
             _httpClient = httpClient;
             _configuration = configuration;
             _steamApiKey = _configuration["Steam:ApiKey"]
                 ?? throw new ArgumentNullException("Steam api key is null!");
             _stratzApiKey = _configuration["StratzApiKey"]
-                ?? throw new ArgumentNullException("Stratz api key is null!"); ;
+                ?? throw new ArgumentNullException("Stratz api key is null!");
         }
 
         public async Task<SteamProfile> GetSteamUserProfileAsync(string steamId)
@@ -58,63 +56,56 @@ namespace DotaMaster.Data.Repositories
         public async Task<BasicInfo> GetBasicInfoAsync(string steamId)
         {
             var dotaId = SteamIdConverter.SteamIdToDotaId(SteamIdConverter.GetIDFromCommunity(steamId));
-            // URL для получения данных
-            string wlUrl = $"https://api.opendota.com/api/players/{dotaId}/wl";
-            string profileUrl = $"https://api.opendota.com/api/players/{dotaId}";
+            const string query = @"
+                query BasicInfoQuery($dotaId: Long!) {
+                  player(steamAccountId: $dotaId) {
+                    steamAccount {
+                      seasonRank
+                    }
+                    matchCount
+                    firstMatchDate
+                    winCount
+                    matchCount
+                    isFollowed
+                  }
+                }";
 
-            // Отправка GET-запросов
-            var wlResponse = await _httpClient.GetAsync(wlUrl);
-            var profileResponse = await _httpClient.GetAsync(profileUrl);
-
-            if (!profileResponse.IsSuccessStatusCode)
+            var requestBody = new
             {
-                if (profileResponse.StatusCode == System.Net.HttpStatusCode.NotFound)
-                {
-                    throw new PrivateProfileException($"Profile {steamId} is private!");
-                }
-            }
-
-            // Десериализация ответа
-            var wlJsonResponse = await wlResponse.Content.ReadAsStringAsync();
-            var winsLoses = JsonConvert.DeserializeObject<WinsLosesResponse>(wlJsonResponse);
-
-            var profileJsonResponse = await profileResponse.Content.ReadAsStringAsync();
-            var profile = JsonConvert.DeserializeObject<OpenDotaProfileResponse>(profileJsonResponse);
-
-            var basicInfo = new BasicInfo()
-            {
-                DotaId = dotaId,
-                SteamId = steamId,
-                Loses = winsLoses.Loses,
-                Wins = winsLoses.Wins,
-                Rank = profile.Rank,
-                IsDotaPlusSub = profile.moreData.IsDotaPlusSub
+                query,
+                variables = new { dotaId }
             };
+            var response = await SendGraphqlRequest(requestBody);
+            response.EnsureSuccessStatusCode();
 
-            // Формирование результата
-            return basicInfo;
+            var jsonResponse = await response.Content.ReadAsStringAsync();
+            var parsed = JsonConvert.DeserializeObject<Dictionary<string, object>>(jsonResponse)
+                ?? throw new ArgumentNullException("Can not parse GetBasicInfoAsync response");
+            var basicInfoResponse = ((((JObject)parsed["data"])
+                ?? throw new ArgumentNullException("Can not parse GetBasicInfoAsync response: 'data' is null"))
+                ["player"]
+                ?? throw new ArgumentNullException("Can not parse GetBasicInfoAsync response: 'player' is null"))
+                .ToObject<BasicInfoResponse>()
+                ?? throw new ArgumentNullException("Can not parse GetBasicInfoAsync response: can not parse to 'BasicInfoResponse'");
+
+            return new BasicInfo()
+            {
+                FirstMatchDate = DateOnly.FromDateTime(DateTimeOffset.FromUnixTimeSeconds(basicInfoResponse.FirstMatchDate).UtcDateTime),
+                IsDotaPlusSub = basicInfoResponse.IsDotaPlusSub,
+                Loses = basicInfoResponse.MatchCount - basicInfoResponse.Wins,
+                Rank = basicInfoResponse.SteamAccount.SeasonRank.ToString(),
+                Wins = basicInfoResponse.Wins
+            };
         }
 
         public async Task<Records> GetRecordsAsync(string steamId)
         {
             var dotaId = SteamIdConverter.SteamIdToDotaId(SteamIdConverter.GetIDFromCommunity(steamId));
-            // URL для получения данных
-            string recordsUrl = $"https://api.opendota.com/api/players/{dotaId}/totals";
-
-            // Отправка GET-запросов
-            var recordsResponseData = await _httpClient.GetAsync(recordsUrl);
-
-            if (!recordsResponseData.IsSuccessStatusCode)
-            {
-                if (recordsResponseData.StatusCode == System.Net.HttpStatusCode.NotFound)
-                {
-                    throw new PrivateProfileException($"Profile {steamId} is private!");
-                }
-            }
-
-            // Десериализация ответа
-            var recordsJsonResponse = await recordsResponseData.Content.ReadAsStringAsync();
-            var recordsResponse = JsonConvert.DeserializeObject<RecordsResponse[]>(recordsJsonResponse);
+            string url = $"{_openDotaUrl}/players/{dotaId}/totals";
+            var response = await _httpClient.GetAsync(url);
+            response.EnsureSuccessStatusCode();
+            var recordsResponse = JsonConvert.DeserializeObject<RecordsResponse[]>(await response.Content.ReadAsStringAsync())
+                ?? throw new ArgumentNullException("Can not parse GetRecordsAsync response");
 
             var records = new Records();
 
@@ -171,36 +162,18 @@ namespace DotaMaster.Data.Repositories
                     records.AvgHeroHealing = (int)Math.Ceiling(record.TotalCount / (double)record.Matches);
                 }
             }
-
-            // Формирование результата
             return records;
         }
 
         public async Task<IEnumerable<HeroStat>> GetRecentHeroesStatsAsync(string steamId)
         {
-            // Преобразуем Steam ID в Dota ID
-            string dotaId = SteamIdConverter.SteamIdToDotaId(SteamIdConverter.GetIDFromCommunity(steamId));
-
-            // URL для получения последних матчей
-            string recentMatchesUrl = $"https://api.opendota.com/api/players/{dotaId}/recentMatches";
-
-            // URL для GraphQL запроса
-            string graphqlUrl = "https://api.stratz.com/graphql";
-
-            // Отправка GET-запроса для получения последних матчей
+            var dotaId = SteamIdConverter.SteamIdToDotaId(SteamIdConverter.GetIDFromCommunity(steamId));
+            string recentMatchesUrl = $"{_openDotaUrl}/players/{dotaId}/recentMatches";
             var recentMatchesResponse = await _httpClient.GetAsync(recentMatchesUrl);
+            var recentMatches = JsonConvert.DeserializeObject<RecentMatchIdResponse[]>(await recentMatchesResponse.Content.ReadAsStringAsync())
+                ?? throw new PrivateProfileException($"Profile {steamId} is private!");
 
-            // Десериализация ответа с последними матчами
-            var recentMatchesJson = await recentMatchesResponse.Content.ReadAsStringAsync();
-            var recentMatches = JsonConvert.DeserializeObject<RecentMatchIdResponse[]>(recentMatchesJson);
-
-            if (recentMatches == null || recentMatches.Length == 0)
-            {
-                throw new PrivateProfileException($"Profile {steamId} is private!");
-            }
-
-            // GraphQL запрос для получения статистики героев
-            string graphqlQuery = @"
+            string query = @"
                 query GetUser($userId: Long!, $matchIds: [Long]) {
                   player(steamAccountId: $userId) {
                     heroesPerformance(request: {matchIds: $matchIds}) {
@@ -227,43 +200,20 @@ namespace DotaMaster.Data.Repositories
                   }
                 }";
 
-            // Извлекаем список ID матчей
             var matchIds = recentMatches.Select(match => match.MatchId).ToArray();
-
-            // Формируем тело запроса
             var requestBody = new
             {
-                query = graphqlQuery,
-                variables = new { userId = long.Parse(dotaId), matchIds }
+                query,
+                variables = new { userId = dotaId, matchIds }
             };
-
-            // Сериализация тела запроса в JSON
-            var jsonRequestBody = JsonConvert.SerializeObject(requestBody);
-
-            // Подготовка тела запроса для отправки
-            var content = new StringContent(jsonRequestBody, Encoding.UTF8, "application/json");
-
-            // Создание HTTP запроса с добавлением заголовка авторизации
-            var request = new HttpRequestMessage(HttpMethod.Post, graphqlUrl)
-            {
-                Content = content
-            };
-            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _stratzApiKey);
-            request.Headers.Add("User-Agent", "STRATZ_API");
-
-            // Отправка запроса и получение ответа
-            using var response = await _httpClient.SendAsync(request);
+            var response = await SendGraphqlRequest(requestBody);
+            response.EnsureSuccessStatusCode();
             var responseContent = await response.Content.ReadAsStringAsync();
 
-            // Проверка успешности ответа
-            response.EnsureSuccessStatusCode();
+            var heroStatsResponse = JsonConvert.DeserializeObject<HeroStatsResponse>(responseContent)
+                ?? throw new ArgumentNullException("Can not parse GetRecentHeroesStatsAsync response: response is null");
 
-            // Десериализация ответа с данными статистики
-            var heroStatsResponse = JsonConvert.DeserializeObject<HeroStatsResponse>(responseContent);
-
-            // Преобразуем данные статистики в более удобный формат
-            var heroStats = heroStatsResponse.Data.Player.HeroStats;
-            var heroStatList = heroStats.Select(heroStat => new HeroStat
+            return heroStatsResponse.Data.Player.HeroStats.Select(heroStat => new HeroStat
             {
                 HeroId = heroStat.HeroId,
                 Name = heroStat.Hero.Name,
@@ -276,33 +226,21 @@ namespace DotaMaster.Data.Repositories
                 AvgXpm = heroStat.Xpm,
                 Impact = heroStat.Impact
             }).ToList();
-
-            // Возвращаем результат
-            return heroStatList;
-
         }
 
         public async Task<IEnumerable<MatchBasicInfo>> GetMatchesInfoAsync(string steamId, int limit = 15, int offset = 0)
         {
-            // Преобразуем Steam ID в Dota ID
-            string dotaId = SteamIdConverter.SteamIdToDotaId(SteamIdConverter.GetIDFromCommunity(steamId));
+            var dotaId = SteamIdConverter.SteamIdToDotaId(SteamIdConverter.GetIDFromCommunity(steamId));
+            string url = $"{_openDotaUrl}/{dotaId}/matches?game_mode=22&limit={limit}&offset={offset}";
 
-            // URL для получения матчей
-            string matchesUrl = $"https://api.opendota.com/api/players/{dotaId}/matches?game_mode=22&limit={limit}&offset={offset}";
+            var response = await _httpClient.GetAsync(url);
+            response.EnsureSuccessStatusCode();
 
-            // Отправка GET-запроса для получения матчей
-            var matchesResponse = await _httpClient.GetAsync(matchesUrl);
+            var matchesJson = await response.Content.ReadAsStringAsync();
+            var matches = JsonConvert.DeserializeObject<MatchBasicInfoResponse[]>(matchesJson)
+                ?? throw new ArgumentNullException("Can not parse GetMatchesInfoAsync response: response is null"); ;
 
-            // Десериализация ответа с последними матчами
-            var matchesJson = await matchesResponse.Content.ReadAsStringAsync();
-            var matches = JsonConvert.DeserializeObject<MatchBasicInfoResponse[]>(matchesJson);
-
-            if (matches == null || matches.Length == 0)
-            {
-                throw new PrivateProfileException($"Profile {steamId} is private!");
-            }
-
-            var matchBasicInfoList = matches.Select(match => new MatchBasicInfo
+            return matches.Select(match => new MatchBasicInfo
             {
                 MatchId = match.MatchId,
                 HeroId = match.HeroId,
@@ -312,9 +250,18 @@ namespace DotaMaster.Data.Repositories
                 Deaths = match.Deaths,
                 Assists = match.Assists
             }).ToList();
+        }
 
-            // Возвращаем результат
-            return matchBasicInfoList;
+        private async Task<HttpResponseMessage> SendGraphqlRequest(object requestBody)
+        {
+            string jsonRequestBody = JsonConvert.SerializeObject(requestBody);
+            var httpRequest = new HttpRequestMessage(HttpMethod.Post, _stratzGraphqlUrl)
+            {
+                Content = new StringContent(jsonRequestBody, Encoding.UTF8, "application/json")
+            };
+            httpRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _stratzApiKey);
+            httpRequest.Headers.UserAgent.ParseAdd("STRATZ_API");
+            return await _httpClient.SendAsync(httpRequest);
         }
     }
 }

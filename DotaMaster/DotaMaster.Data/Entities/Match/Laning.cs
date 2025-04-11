@@ -1,19 +1,12 @@
-﻿using DotaMaster.Data.Entities.Enums;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace DotaMaster.Data.Entities
+﻿namespace DotaMaster.Data.Entities.Match
 {
-    public class LaningAnalyze
+    public class Laning
     {
-        public string MatchId { get; set; }
-        public string Position { get; set; }
-        public string Rank { get; set; }
+        public required string MatchId { get; set; }
+        public required string Position { get; set; }
+        public required string Rank { get; set; }
         public int HeroId { get; set; }
-        public string DotaId { get; set; }
+        public long DotaId { get; set; }
         public int LaningCs { get; set; }
         public double AvgLaningCs { get; set; }
         public int LaningKills { get; set; }

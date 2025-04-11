@@ -116,7 +116,7 @@ namespace DotaMaster.API.Controllers
                 return BadRequest(new { Message = "Steam ID not found in claims" });
             }
 
-            var matchModels = await _profileService.GetBasicMatchesInfo(steamId);
+            var matchModels = await _profileService.GetRecentMatches(steamId);
             var matchDtos = _mapper.Map<IEnumerable<MatchBasicInfoDto>>(matchModels);
             return Ok(matchDtos);
         }

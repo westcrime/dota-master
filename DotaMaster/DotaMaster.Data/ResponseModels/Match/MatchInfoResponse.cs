@@ -1,34 +1,18 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace DotaMaster.Data.ResponseModels.MatchResponses
+﻿namespace DotaMaster.Data.ResponseModels.Match
 {
-    public class GeneralMatchInfoResponse
+    public class MatchInfoResponse
     {
-        public MatchData Data { get; set; }
-
-        public class MatchData
-        {
-            public MatchInfo Match { get; set; }
-        }
-
-        public class MatchInfo
-        {
-            public bool DidRadiantWin { get; set; }
-            public int Rank { get; set; }
-            public int DurationSeconds { get; set; }
-            public List<int> RadiantNetworthLeads { get; set; }
-            public List<int> RadiantExperienceLeads { get; set; }
-            public List<int> RadiantKills { get; set; }
-            public List<int> DireKills { get; set; }
-            public List<Player> Players { get; set; }
-        }
-
+        public bool DidRadiantWin { get; set; }
+        public int Rank { get; set; }
+        public int DurationSeconds { get; set; }
+        public required List<int> RadiantNetworthLeads { get; set; }
+        public required List<int> RadiantExperienceLeads { get; set; }
+        public required List<int> RadiantKills { get; set; }
+        public required List<int> DireKills { get; set; }
+        public required List<Player> Players { get; set; }
         public class Player
         {
+            public required string Position { get; set; }
             public int HeroId { get; set; }
             public bool IsRadiant { get; set; }
             public int Networth { get; set; }
@@ -51,5 +35,4 @@ namespace DotaMaster.Data.ResponseModels.MatchResponses
             public int? Backpack2Id { get; set; }
         }
     }
-
 }

@@ -1,24 +1,35 @@
-﻿using AutoMapper;
+﻿using System.Text;
+using AutoMapper;
 using DotaMaster.Application.Models;
+using DotaMaster.Application.Models.Match;
 using DotaMaster.Data.Repositories;
-using Microsoft.EntityFrameworkCore.Storage.ValueConversion.Internal;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace DotaMaster.Application.Services
 {
-    public class MatchService
+    public class MatchService(MatchRepository matchRepository, IMapper mapper)
     {
-        private readonly MatchRepository _matchRepository;
-        private readonly IMapper _mapper;
+        private readonly MatchRepository _matchRepository = matchRepository;
+        private readonly IMapper _mapper = mapper;
 
-        public MatchService(MatchRepository matchRepository, IMapper mapper)
+        public async Task<MatchModel> Get(string steamId, string matchId)
         {
-            _matchRepository = matchRepository;
-            _mapper = mapper;
+            var longMatchId = long.Parse(matchId);
+            var generalInfo = await _matchRepository.GetMatchInfo(longMatchId);
+            var rank = GetRank(generalInfo.Rank);
+            var userStats = await _matchRepository.GetUserStats(steamId, longMatchId);
+            var avgHeroStats = await _matchRepository.GetAvgHeroStats(
+                generalInfo.DurationSeconds,
+                userStats.HeroId, 
+                rank,
+                userStats.Position);
+            var laning = await _matchRepository.GetLaningAsync(rank, userStats.HeroId, userStats.Position, longMatchId, steamId);
+
+            var laningAnalyze = await _matchRepository.GetLaningAnalyzeAsync(longMatchId, steamId);
+            var laningAnalyzeModel = _mapper.Map<LaningAnalyzeModel>(laningAnalyze);
+            laningAnalyzeModel.CsAdvice = GenerateDetailedCsLaningAdvice(laningAnalyzeModel.Position, laningAnalyzeModel.LaningCs, laningAnalyzeModel.AvgLaningCs);
+            laningAnalyzeModel.KdaAdvice = AnalyzeKdaForLaning((double)laningAnalyzeModel.LaningKills, (double)laningAnalyzeModel.LaningDeaths, laningAnalyzeModel.AvgLaningKills, laningAnalyzeModel.AvgLaningDeaths);
+            laningAnalyzeModel.NetworthAdvice = AnalyzeNetworthForLaning(laningAnalyzeModel.LaningNetworth, laningAnalyzeModel.AvgLaningNetworth);
+            return laningAnalyzeModel;
         }
 
         public async Task<LaningAnalyzeModel> GetLaningAnalyze(string steamId, string matchId)
@@ -182,7 +193,7 @@ namespace DotaMaster.Application.Services
         public async Task<GeneralHeroPerfomanceModel> GetGeneralPerfomance(long matchId, string steamId)
         {
 
-            var perfomance = await _matchRepository.GetUserPerfomance(steamId, matchId);
+            var perfomance = await _matchRepository.GetUserStats(steamId, matchId);
             var perfomanceModel = _mapper.Map<GeneralHeroPerfomanceModel>(perfomance);
             perfomanceModel.Advice = await GetGeneralPerfomanceAdvice(perfomanceModel);
             return perfomanceModel;
@@ -233,5 +244,17 @@ namespace DotaMaster.Application.Services
             return adviceBuilder.ToString();
         }
 
+        private string GetRank(int matchRank)
+        {
+            return matchRank switch
+            {
+                <= 0 => "UNCALIBRATED",
+                > 10 and < 30 => "HERALD_GUARDIAN",
+                >= 30 and < 50 => "CRUSADER_ARCHON",
+                >= 50 and < 70 => "LEGEND_ANCIENT",
+                >= 70 and < 90 => "DIVINE_IMMORTAL",
+                _ => "UNKNOWN"
+            };
+        }
     }
 }

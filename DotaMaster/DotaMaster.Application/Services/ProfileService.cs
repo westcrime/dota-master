@@ -1,12 +1,6 @@
 ﻿using AutoMapper;
-using DotaMaster.Application.Models;
-using DotaMaster.Data.Entities;
+using DotaMaster.Application.Models.Profile;
 using DotaMaster.Data.Repositories;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace DotaMaster.Application.Services
 {
@@ -21,10 +15,10 @@ namespace DotaMaster.Application.Services
             _mapper = mapper;
         }
 
-        public async Task<ProfileModel> GetProfile(string steamId)
+        public async Task<SteamProfileModel> GetProfile(string steamId)
         {
             var profile = await _profileRepository.GetSteamUserProfileAsync(steamId);
-            return _mapper.Map<ProfileModel>(profile);
+            return _mapper.Map<SteamProfileModel>(profile);
         }
 
         public async Task<BasicInfoModel> GetBasicInfo(string steamId)
@@ -45,7 +39,7 @@ namespace DotaMaster.Application.Services
             return _mapper.Map<IEnumerable<HeroStatModel>>(heroStats);
         }
 
-        public async Task<IEnumerable<MatchBasicInfoModel>> GetBasicMatchesInfo(string steamId, int limit = 15, int offset = 0)
+        public async Task<IEnumerable<MatchBasicInfoModel>> GetRecentMatches(string steamId, int limit = 15, int offset = 0)
         {
             var matchesInfo = await _profileRepository.GetMatchesInfoAsync(steamId, limit, offset);
             return _mapper.Map<IEnumerable<MatchBasicInfoModel>>(matchesInfo);

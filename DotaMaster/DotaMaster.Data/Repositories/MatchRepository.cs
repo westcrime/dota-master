@@ -1,17 +1,15 @@
-﻿using AutoMapper;
+﻿using System.Net.Http.Headers;
+using System.Text;
+using AutoMapper;
 using DotaMaster.Data.Entities;
+using DotaMaster.Data.Entities.Match;
 using DotaMaster.Data.IdConverters;
+using DotaMaster.Data.ResponseModels.Match;
 using DotaMaster.Data.ResponseModels.MatchResponses;
-using DotaMaster.Data.ResponseModels.ProfileResponses;
+using DotaMaster.Domain.Exceptions;
 using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.Http.Headers;
-using System.Text;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
+using Newtonsoft.Json.Linq;
 
 namespace DotaMaster.Data.Repositories
 {
@@ -22,132 +20,23 @@ namespace DotaMaster.Data.Repositories
         private readonly IConfiguration _configuration;
         private readonly HttpClient _httpClient;
         private readonly IMapper _mapper;
+        private const string _openDotaUrl = "https://api.opendota.com/api";
+        private const string _stratzGraphqlUrl = "https://api.stratz.com/graphql";
 
         public MatchRepository(IConfiguration configuration, HttpClient httpClient, IMapper mapper)
         {
             _mapper = mapper;
             _httpClient = httpClient;
             _configuration = configuration;
-            _steamApiKey = _configuration["Steam:ApiKey"];
-            _stratzApiKey = _configuration["StratzApiKey"];
+            _steamApiKey = _configuration["Steam:ApiKey"]
+                ?? throw new ArgumentNullException("Steam api key is null!");
+            _stratzApiKey = _configuration["StratzApiKey"]
+                ?? throw new ArgumentNullException("Stratz api key is null!");
         }
 
-        private async Task<HeroesInMatchInfoResponse> GetHeroesInMatch(long matchId)
+        public async Task<AvgHeroStats> GetAvgHeroStats(int duration, int heroId, string rankBracket, string pos)
         {
-            const string GraphqlUrl = "https://api.stratz.com/graphql";
-            const string HeroesInMatchInfoQuery = @"
-                query GetUser($matchId: Long!) {
-                    match(id: $matchId) {
-                        players {
-                            position
-                            heroId
-                            isRadiant
-                        }
-                        rank
-                    }
-                }";
-
-            // Формирование тела запроса
-            var requestBody = new
-            {
-                query = HeroesInMatchInfoQuery,
-                variables = new { matchId }
-            };
-
-            // Сериализация тела запроса в JSON
-            string jsonRequestBody = JsonConvert.SerializeObject(requestBody);
-
-            using var httpRequest = new HttpRequestMessage(HttpMethod.Post, GraphqlUrl)
-            {
-                Content = new StringContent(jsonRequestBody, Encoding.UTF8, "application/json")
-            };
-
-            // Добавление заголовков
-            httpRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _stratzApiKey);
-            httpRequest.Headers.UserAgent.ParseAdd("STRATZ_API");
-
-            // Отправка запроса
-            using var response = await _httpClient.SendAsync(httpRequest);
-
-            // Проверка успешности ответа
-            if (!response.IsSuccessStatusCode)
-            {
-                string errorContent = await response.Content.ReadAsStringAsync();
-                throw new HttpRequestException($"Request failed with status {response.StatusCode}: {errorContent}");
-            }
-
-            // Чтение и десериализация ответа
-            string responseContent = await response.Content.ReadAsStringAsync();
-            var heroesInMatchInfo = JsonConvert.DeserializeObject<HeroesInMatchInfoResponse>(responseContent);
-
-            if (heroesInMatchInfo == null)
-            {
-                throw new InvalidOperationException($"Received null response for match ID {matchId}.");
-            }
-
-            return heroesInMatchInfo;
-        }
-
-        private async Task<AdditionalInfoResponse> GetInfoAboutUserInMatch(long dotaId, long matchId)
-        {
-            const string GraphqlUrl = "https://api.stratz.com/graphql";
-            const string AdditionalInfoQuery = @"
-                query GetUser($matchId: Long!, $dotaId: Long) {
-                    match(id: $matchId) {
-                        players(steamAccountId: $dotaId) {
-                            position
-                            heroId
-                        }
-                        rank
-                        durationSeconds
-                    }
-                }";
-
-            // Формирование тела запроса
-            var requestBody = new
-            {
-                query = AdditionalInfoQuery,
-                variables = new { dotaId, matchId }
-            };
-
-            // Сериализация тела запроса в JSON
-            string jsonRequestBody = JsonConvert.SerializeObject(requestBody);
-
-            using var httpRequest = new HttpRequestMessage(HttpMethod.Post, GraphqlUrl)
-            {
-                Content = new StringContent(jsonRequestBody, Encoding.UTF8, "application/json")
-            };
-
-            // Добавление заголовков
-            httpRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _stratzApiKey);
-            httpRequest.Headers.UserAgent.ParseAdd("STRATZ_API");
-
-            // Отправка запроса
-            using var response = await _httpClient.SendAsync(httpRequest);
-
-            // Проверка успешности ответа
-            if (!response.IsSuccessStatusCode)
-            {
-                string errorContent = await response.Content.ReadAsStringAsync();
-                throw new HttpRequestException($"Request failed with status {response.StatusCode}: {errorContent}");
-            }
-
-            // Десериализация ответа
-            string responseContent = await response.Content.ReadAsStringAsync();
-            var additionalInfo = JsonConvert.DeserializeObject<AdditionalInfoResponse>(responseContent);
-
-            if (additionalInfo == null)
-            {
-                throw new InvalidOperationException($"Additional info for match ID {matchId} is null.");
-            }
-
-            return additionalInfo;
-        }
-
-        private async Task<AvgHeroPerfomanceResponse> GetAvgHeroPerfomance(int duration, int heroId, string rankBracket, string pos)
-        {
-            const string GraphqlUrl = "https://api.stratz.com/graphql";
-            const string AdditionalInfoQuery = @"query GetStats($duration: Int, $heroId: Short, $rankBracket: RankBracketBasicEnum, $pos: MatchPlayerPositionType) {
+            const string AdditionalInfoQuery = @"query GetAvgHeroStats($duration: Int, $heroId: Short, $rankBracket: RankBracketBasicEnum, $pos: MatchPlayerPositionType) {
                   heroStats {
                     stats(
                       maxTime: $duration
@@ -169,72 +58,33 @@ namespace DotaMaster.Data.Repositories
                     }
                   }
                 }";
-
-            // Формирование тела запроса
             var requestBody = new
             {
                 query = AdditionalInfoQuery,
                 variables = new { duration, heroId, rankBracket, pos }
             };
+            var response = await SendGraphqlRequest(requestBody);
+            var jsonResponse = await response.Content.ReadAsStringAsync();
+            var parsed = JsonConvert.DeserializeObject<Dictionary<string, object>>(jsonResponse)
+                ?? throw new ArgumentNullException("Can not parse GetAvgHeroStats response");
 
-            // Сериализация тела запроса в JSON
-            string jsonRequestBody = JsonConvert.SerializeObject(requestBody);
+            var avgHeroStatsResponse = (((((JObject)parsed["data"])
+                ["heroStats"] ?? throw new BadRequestException("Invalid input data from user"))
+                ["stats"] ?? throw new BadRequestException("Invalid input data from user"))
+                .First() ?? throw new BadRequestException("Invalid input data from user"))
+                .ToObject<AvgHeroStatsResponse>();
 
-            using var httpRequest = new HttpRequestMessage(HttpMethod.Post, GraphqlUrl)
-            {
-                Content = new StringContent(jsonRequestBody, Encoding.UTF8, "application/json")
-            };
-
-            // Добавление заголовков
-            httpRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _stratzApiKey);
-            httpRequest.Headers.UserAgent.ParseAdd("STRATZ_API");
-
-            // Отправка запроса
-            using var response = await _httpClient.SendAsync(httpRequest);
-
-            // Проверка успешности ответа
-            if (!response.IsSuccessStatusCode)
-            {
-                string errorContent = await response.Content.ReadAsStringAsync();
-                throw new HttpRequestException($"Request failed with status {response.StatusCode}: {errorContent}");
-            }
-
-            // Десериализация ответа
-            string responseContent = await response.Content.ReadAsStringAsync();
-            var additionalInfo = JsonConvert.DeserializeObject<AvgHeroPerfomanceResponse>(responseContent);
-
-            if (additionalInfo == null)
-            {
-                throw new InvalidOperationException($"Additional info for hero ID {heroId} is null.");
-            }
-
-            return additionalInfo;
+            return _mapper.Map<AvgHeroStats>(avgHeroStatsResponse);
         }
 
-        public async Task<GeneralHeroPerfomance> GetUserPerfomance(string steamId, long matchId)
+        public async Task<UserStats> GetUserStats(string steamId, long matchId)
         {
-            if (matchId <= 0)
-                throw new ArgumentException("Match ID must be greater than zero.", nameof(matchId));
-
-            if (string.IsNullOrWhiteSpace(steamId))
-                throw new ArgumentException("Steam ID cannot be null or empty.", nameof(steamId));
-
-            string dotaId = SteamIdConverter.SteamIdToDotaId(SteamIdConverter.GetIDFromCommunity(steamId));
-            var additionalInfo = await GetInfoAboutUserInMatch(long.Parse(dotaId), matchId)
-                ?? throw new InvalidOperationException($"Can't get additional info for match {matchId} for account {dotaId}");
-
-            var (rank, rankBracket) = GetRankInfo(additionalInfo.Data.Match.Rank);
-            var duration = additionalInfo.Data.Match.DurationSeconds / 60.0;
-            var heroId = additionalInfo.Data.Match.Players.First().HeroId;
-            var position = additionalInfo.Data.Match.Players.First().Position;
-
-            var avgHeroPerfomance = await GetAvgHeroPerfomance((int)duration, heroId, rankBracket, position);
-
-            string graphqlUrl = "https://api.stratz.com/graphql";
+            var dotaId = SteamIdConverter.SteamIdToDotaId(SteamIdConverter.GetIDFromCommunity(steamId));
             string graphqlQuery = @"
-                query GetUser($matchId: Long!, $userId: Long!) {
+                query GetUserStats($matchId: Long!, $dotaId: Long!) {
                   match(id: $matchId) {
-                    players(steamAccountId: $userId) {
+                    players(steamAccountId: $dotaId) {
+                      position
                       heroId
                       isRadiant
                       networth
@@ -246,6 +96,13 @@ namespace DotaMaster.Data.Repositories
                       numDenies
                       numLastHits
                       imp
+                      stats {
+                        impPerMinute
+                        itemPurchases {
+                          itemId
+                          time
+                        }
+                      }
                     }
                   }
                 }";
@@ -253,23 +110,25 @@ namespace DotaMaster.Data.Repositories
             var requestBody = new
             {
                 query = graphqlQuery,
-                variables = new { matchId, userId = long.Parse(dotaId) }
+                variables = new { matchId, dotaId }
             };
+            var response = await SendGraphqlRequest(requestBody);
+            var jsonResponse = await response.Content.ReadAsStringAsync();
+            var parsed = JsonConvert.DeserializeObject<Dictionary<string, object>>(jsonResponse)
+                ?? throw new ArgumentNullException("Can not parse GetBasicInfoAsync response");
 
-            var perfomanceInfo = await SendGraphqlRequest<PerfomanceResponse>(graphqlUrl, requestBody);
+            var userStatsResponse = (((((JObject)parsed["data"])
+                ["match"] ?? throw new BadRequestException("Invalid match id or dota id"))
+                ["players"] ?? throw new BadRequestException("Invalid match id or dota id"))
+                .First ?? throw new BadRequestException("Invalid match id or dota id"))
+                .ToObject<UserStatsResponse>();
 
-            var generalHeroPerfomance = new GeneralHeroPerfomance()
-            {
-                AvgHeroPerfomance = _mapper.Map<AvgHeroPerfomance>(avgHeroPerfomance.Data.HeroStats.Stats.First()),
-                PlayerPerfomance = _mapper.Map<HeroPlayerPerfomance>(perfomanceInfo.Data.Match.Players.First())
-            };
-            return generalHeroPerfomance;
+            return _mapper.Map<UserStats>(userStatsResponse);
         }
 
         public async Task<MatchInfo> GetMatchInfo(long matchId)
         {
-            string GraphqlUrl = "https://api.stratz.com/graphql";
-            const string MatchInfoQuery = @"query GetUser($matchId: Long!) {
+            const string query = @"query GetMatchInfo($matchId: Long!) {
               match(id: $matchId) {
                 didRadiantWin
                 rank
@@ -279,6 +138,7 @@ namespace DotaMaster.Data.Repositories
                 radiantKills
                 direKills
                 players {
+                  position
                   heroId
                   isRadiant
                   networth
@@ -302,59 +162,27 @@ namespace DotaMaster.Data.Repositories
                 }
               }
             }";
-
-            // Формирование тела запроса
             var requestBody = new
             {
-                query = MatchInfoQuery,
+                query,
                 variables = new { matchId }
             };
-
-            // Сериализация тела запроса в JSON
-            string jsonRequestBody = JsonConvert.SerializeObject(requestBody);
-
-            using var httpRequest = new HttpRequestMessage(HttpMethod.Post, GraphqlUrl)
-            {
-                Content = new StringContent(jsonRequestBody, Encoding.UTF8, "application/json")
-            };
-
-            // Добавление заголовков
-            httpRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _stratzApiKey);
-            httpRequest.Headers.UserAgent.ParseAdd("STRATZ_API");
-
-            // Отправка запроса
-            using var response = await _httpClient.SendAsync(httpRequest);
-
-            // Проверка успешности ответа
-            if (!response.IsSuccessStatusCode)
-            {
-                string errorContent = await response.Content.ReadAsStringAsync();
-                throw new HttpRequestException($"Request failed with status {response.StatusCode}: {errorContent}");
-            }
-
-            // Десериализация ответа
-            string responseContent = await response.Content.ReadAsStringAsync();
-
-            var matchInfo = JsonConvert.DeserializeObject<GeneralMatchInfoResponse>(responseContent);
-
-            if (matchInfo == null)
-            {
-                throw new InvalidOperationException($"General match info for match ID {matchId} is null.");
-            }
-
-            return _mapper.Map<MatchInfo>(matchInfo.Data.Match);
+            var response = await SendGraphqlRequest(requestBody);
+            var jsonResponse = await response.Content.ReadAsStringAsync();
+            var parsed = JsonConvert.DeserializeObject<Dictionary<string, object>>(jsonResponse)
+                ?? throw new ArgumentNullException("Can not parse GetMatchInfo response");
+            var userStatsResponse = (((((JObject)parsed["data"])
+                ["match"] ?? throw new BadRequestException("Invalid match id or dota id"))
+                ["players"] ?? throw new BadRequestException("Invalid match id or dota id"))
+                .First ?? throw new BadRequestException("Invalid match id or dota id"))
+                .ToObject<MatchInfoResponse>();
+            return _mapper.Map<MatchInfo>(response);
         }
 
         public async Task<PickAnalyze> GetPickAnalyzeAsync(long matchId, string steamId, int take = 125)
         {
-            if (matchId <= 0)
-                throw new ArgumentException("Match ID must be greater than zero.", nameof(matchId));
-
-            if (string.IsNullOrWhiteSpace(steamId))
-                throw new ArgumentException("Steam ID cannot be null or empty.", nameof(steamId));
-
-            string dotaId = SteamIdConverter.SteamIdToDotaId(SteamIdConverter.GetIDFromCommunity(steamId));
-            var additionalInfo = await GetInfoAboutUserInMatch(long.Parse(dotaId), matchId)
+            var dotaId = SteamIdConverter.SteamIdToDotaId(SteamIdConverter.GetIDFromCommunity(steamId));
+            var additionalInfo = await GetInfoAboutUserInMatch(dotaId, matchId)
                 ?? throw new InvalidOperationException($"Can't get additional info for match {matchId} for account {dotaId}");
 
             var (rank, rankBracket) = GetRankInfo(additionalInfo.Data.Match.Rank);
@@ -403,7 +231,7 @@ namespace DotaMaster.Data.Repositories
 
             var winratesInfo = await SendGraphqlRequest<WinratesResponse>(graphqlUrl, requestBody);
 
-            var heroesInMatchInfo = await GetHeroesInMatch(matchId);
+            var heroesInMatchInfo = await GetGeneralMatchInfo(matchId);
             var userIsRadiant = heroesInMatchInfo.Data.Match.Players.Single(p => p.HeroId == heroId).IsRadiant;
 
             var alliedHeroes = heroesInMatchInfo.Data.Match.Players
@@ -440,7 +268,7 @@ namespace DotaMaster.Data.Repositories
             };
         }
 
-        private (string rank, string rankBracket) GetRankInfo(int matchRank)
+        private static (string rank, string rankBracket) GetRankInfo(int matchRank)
         {
             if (matchRank <= 0)
                 return ("UNCALIBRATED", "UNCALIBRATED");
@@ -465,19 +293,12 @@ namespace DotaMaster.Data.Repositories
                 throw new InvalidOperationException("Wrong number of allied or enemy heroes.");
         }
 
-        public async Task<LaningAnalyze> GetLaningAnalyzeAsync(long matchId, string steamId)
+        public async Task<Laning> GetLaningAsync(string rank, int heroId, string pos, long matchId, string steamId)
         {
-            string dotaId = SteamIdConverter.SteamIdToDotaId(SteamIdConverter.GetIDFromCommunity(steamId));
-            var additionalInfo = await GetInfoAboutUserInMatch(long.Parse(dotaId), matchId)
-                ?? throw new InvalidOperationException($"Cannot get additional info for match {matchId} for account {dotaId}.");
-
-            var playerInfo = additionalInfo.Data.Match.Players.First()
-                ?? throw new InvalidOperationException("Player information not found in the match data.");
-
-            string rank = GetRank(additionalInfo.Data.Match.Rank);
+            var dotaId = SteamIdConverter.SteamIdToDotaId(SteamIdConverter.GetIDFromCommunity(steamId));
 
             string graphqlQuery = @"
-                query GetLaneAnalyze($matchId: Long!, $pos: [MatchPlayerPositionType], $heroId: [Short], $dotaId: Long, $rank: RankBracketBasicEnum) {
+                query GetLaneAnalyze($matchId: Long!, $pos: [MatchPlayerPositionType], $heroId: Short, $dotaId: Long, $rank: RankBracketBasicEnum) {
                     match(id: $matchId) {
                         players(steamAccountId: $dotaId) {
                             stats {
@@ -490,7 +311,7 @@ namespace DotaMaster.Data.Repositories
                     }
                     heroStats {
                         stats(
-                            heroIds: $heroId
+                            heroIds: [$heroId]
                             bracketBasicIds: [$rank]
                             maxTime: 10
                             positionIds: $pos
@@ -510,67 +331,59 @@ namespace DotaMaster.Data.Repositories
                 query = graphqlQuery,
                 variables = new
                 {
-                    dotaId = long.Parse(dotaId),
+                    dotaId,
                     matchId,
-                    heroId = new[] { playerInfo.HeroId },
+                    heroId,
                     rank,
-                    pos = playerInfo.Position
+                    pos
                 }
             };
+            var response = await SendGraphqlRequest(requestBody);
+            var jsonResponse = await response.Content.ReadAsStringAsync();
+            var parsed = JsonConvert.DeserializeObject<Dictionary<string, object>>(jsonResponse)
+                ?? throw new ArgumentNullException("Can not parse GetLaningAsync response");
+            var laningResponse = ((((((JObject)parsed["data"])
+                ["match"] ?? throw new BadRequestException("Invalid input data"))
+                ["players"] ?? throw new BadRequestException("Invalid input data"))
+                .First ?? throw new BadRequestException("Invalid input data"))
+                ["stats"] ?? throw new BadRequestException("Invalid input data"))
+                .ToObject<LaningResponse>() ?? throw new BadRequestException("Can not parse to LaningResponse");
 
-            var laningInfo = await SendGraphqlRequest<LaningResponse>("https://api.stratz.com/graphql", requestBody)
-                ?? throw new InvalidOperationException($"Cannot get laning info for match {matchId}.");
+            var avgLaningResponse = ((((((JObject)parsed["data"])
+                ["match"] ?? throw new BadRequestException("Invalid input data"))
+                ["heroStats"] ?? throw new BadRequestException("Invalid input data"))
+                ["stats"] ?? throw new BadRequestException("Invalid input data"))
+                .First ?? throw new BadRequestException("Invalid input data"))
+                .ToObject<AvgLaningStatsResponse>() ?? throw new BadRequestException("Can not parse to AvgLaningStatsResponse");
 
-            var stats = laningInfo.Data.HeroStats.Stats.First();
-            var playerStats = laningInfo.Data.Match.Players.First().Stats;
-
-            return new LaningAnalyze
+            return new Laning
             {
-                AvgLaningCs = stats.Cs,
-                AvgLaningDeaths = stats.Deaths,
-                AvgLaningKills = stats.Kills,
-                AvgLaningNetworth = stats.Networth,
+                AvgLaningCs = avgLaningResponse.Cs,
+                AvgLaningDeaths = avgLaningResponse.Deaths,
+                AvgLaningKills = avgLaningResponse.Kills,
+                AvgLaningNetworth = avgLaningResponse.Networth,
                 DotaId = dotaId,
-                HeroId = playerInfo.HeroId,
+                HeroId = heroId,
                 MatchId = matchId.ToString(),
-                Position = playerInfo.Position,
+                Position = pos,
                 Rank = rank,
-                LaningCs = playerStats.LastHitsPerMinute.Take(10).Sum(),
-                LaningNetworth = playerStats.NetworthPerMinute[9],
-                LaningDeaths = playerStats.DeathEvents.Count(d => d.Time < 600),
-                LaningKills = playerStats.KillEvents.Count(k => k.Time < 600)
+                LaningCs = laningResponse.LastHitsPerMinute.Take(10).Sum(),
+                LaningNetworth = laningResponse.NetworthPerMinute[9],
+                LaningDeaths = laningResponse.DeathEvents.Count(d => d < 600),
+                LaningKills = laningResponse.KillEvents.Count(k => k < 600)
             };
         }
 
-        private string GetRank(int matchRank)
+        private async Task<HttpResponseMessage> SendGraphqlRequest(object requestBody)
         {
-            return matchRank switch
+            string jsonRequestBody = JsonConvert.SerializeObject(requestBody);
+            var httpRequest = new HttpRequestMessage(HttpMethod.Post, _stratzGraphqlUrl)
             {
-                <= 0 => "UNCALIBRATED",
-                > 10 and < 30 => "HERALD_GUARDIAN",
-                >= 30 and < 50 => "CRUSADER_ARCHON",
-                >= 50 and < 70 => "LEGEND_ANCIENT",
-                >= 70 and < 90 => "DIVINE_IMMORTAL",
-                _ => "UNKNOWN"
+                Content = new StringContent(jsonRequestBody, Encoding.UTF8, "application/json")
             };
+            httpRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _stratzApiKey);
+            httpRequest.Headers.UserAgent.ParseAdd("STRATZ_API");
+            return await _httpClient.SendAsync(httpRequest);
         }
-
-        private async Task<T> SendGraphqlRequest<T>(string url, object requestBody)
-        {
-            var jsonBody = JsonConvert.SerializeObject(requestBody);
-            var content = new StringContent(jsonBody, Encoding.UTF8, "application/json");
-
-            using var request = new HttpRequestMessage(HttpMethod.Post, url) { Content = content };
-            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _stratzApiKey);
-            request.Headers.UserAgent.ParseAdd("STRATZ_API");
-
-            using var response = await _httpClient.SendAsync(request);
-            response.EnsureSuccessStatusCode();
-
-            string responseContent = await response.Content.ReadAsStringAsync();
-            return JsonConvert.DeserializeObject<T>(responseContent)
-                   ?? throw new InvalidOperationException("Deserialized response is null.");
-        }
-
     }
 }

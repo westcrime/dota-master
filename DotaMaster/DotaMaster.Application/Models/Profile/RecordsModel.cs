@@ -1,14 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace DotaMaster.Application.Models
+﻿namespace DotaMaster.Application.Models.Profile
 {
     public record RecordsModel(
         long Kills,
-        long AvgKills, 
+        long AvgKills,
         long Deaths,
         long AvgDeaths,
         long Assists,

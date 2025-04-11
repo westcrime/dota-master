@@ -1,30 +1,24 @@
-﻿using DotaMaster.Data.Entities;
-using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using Newtonsoft.Json;
 using System.Text.Json;
-using System.Threading.Tasks;
 
 namespace DotaMaster.Data.ResponseModels.ProfileResponses
 {
     public class HeroStatsResponse
     {
         [JsonProperty("data")]
-        public Data Data { get; set; }
+        public required Data Data { get; set; }
     }
 
     public class Data
     {
         [JsonProperty("player")]
-        public PlayerData Player { get; set; }
+        public required PlayerData Player { get; set; }
     }
 
     public class PlayerData
     {
         [JsonProperty("heroesPerformance")]
-        public Stat[] HeroStats { get; set; }
+        public required Stat[] HeroStats { get; set; }
     }
 
     public class Stat
@@ -33,7 +27,7 @@ namespace DotaMaster.Data.ResponseModels.ProfileResponses
         public int HeroId { get; set; }
 
         [JsonProperty("hero")]
-        public Hero Hero { get; set; }
+        public required Hero Hero { get; set; }
 
         [JsonProperty("matchCount")]
         public int MatchCount { get; set; }
@@ -66,6 +60,6 @@ namespace DotaMaster.Data.ResponseModels.ProfileResponses
     public class Hero
     {
         [JsonProperty("name")]
-        public string Name { get; set; }
+        public required string Name { get; set; }
     }
 }

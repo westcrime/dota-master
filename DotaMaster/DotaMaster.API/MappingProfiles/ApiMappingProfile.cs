@@ -1,5 +1,6 @@
 ﻿using DotaMaster.API.DTOs;
 using DotaMaster.Application.Models;
+using DotaMaster.Application.Models.Profile;
 using DotaMaster.Data.Entities;
 
 namespace DotaMaster.API.MappingProfiles
@@ -9,7 +10,7 @@ namespace DotaMaster.API.MappingProfiles
         public ApiMappingProfile()
         {
             // Profile mapping
-            CreateMap<ProfileModel, ProfileDto>();
+            CreateMap<SteamProfileModel, ProfileDto>();
 
             CreateMap<BasicInfoModel, BasicInfoDto>();
 

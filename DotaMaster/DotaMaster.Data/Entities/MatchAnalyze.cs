@@ -1,4 +1,5 @@
 ﻿using DotaMaster.Data.Entities.Enums;
+using DotaMaster.Data.Entities.Match;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -19,7 +20,7 @@ namespace DotaMaster.Data.Entities
         public int Rank { get; set; }
         public Roles Role { get; set; }
         public PickAnalyze PickAnalyze { get; set; }
-        public LaningAnalyze LaningAnalyze { get; set; }
+        public Laning LaningAnalyze { get; set; }
         public ItemsAnalyze ItemsAnalyze { get; set; }
 
     }

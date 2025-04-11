@@ -11,7 +11,7 @@ namespace DotaMaster.Data.IdConverters
     {
         private const string SteamConstant = "76561197960265728";
 
-        public static string SteamIdToDotaId(string steamId)
+        public static long SteamIdToDotaId(string steamId)
         {
             // Разделяем SteamID на части
             var steamIdParts = steamId.Split(':');
@@ -29,7 +29,7 @@ namespace DotaMaster.Data.IdConverters
 
             // Формируем [U:1:{steamacct}]
             //return $"[U:1:{steamAccount}]";
-            return steamAccount.ToString();
+            return (long)steamAccount;
         }
 
         /// <summary>

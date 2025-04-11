@@ -1,25 +1,21 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace DotaMaster.Data.Entities
+﻿namespace DotaMaster.Data.Entities.Match
 {
     public class MatchInfo
     {
         public bool DidRadiantWin { get; set; }
         public int Rank { get; set; }
         public int DurationSeconds { get; set; }
-        public List<int> RadiantNetworthLeads { get; set; }
-        public List<int> RadiantExperienceLeads { get; set; }
-        public List<int> RadiantKills { get; set; }
-        public List<int> DireKills { get; set; }
-        public List<PlayerPerfomance> Players { get; set; }
+        public required List<int> RadiantNetworthLeads { get; set; }
+        public required List<int> RadiantExperienceLeads { get; set; }
+        public required List<int> RadiantKills { get; set; }
+        public required List<int> DireKills { get; set; }
+        public required List<PlayerPerfomance> Players { get; set; }
     }
 
     public class PlayerPerfomance
     {
+        public required string SteamAccountId { get; set; }
+        public required string Position { get; set; }
         public int HeroId { get; set; }
         public bool IsRadiant { get; set; }
         public int Networth { get; set; }

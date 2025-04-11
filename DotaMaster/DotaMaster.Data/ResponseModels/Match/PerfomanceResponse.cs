@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Text.Json.Serialization;
 
 namespace DotaMaster.Data.ResponseModels.MatchResponses
 {
@@ -19,21 +15,34 @@ namespace DotaMaster.Data.ResponseModels.MatchResponses
         public int NumDenies { get; set; }
         public int NumLastHits { get; set; }
         public int Imp { get; set; }
+        public required StatsResponse Stats { get; set; }
     }
 
     public class PlayerPerfomanceMatchModel
     {
-        public List<PlayerPerfomancePlayerModel> Players { get; set; }
+        public required List<PlayerPerfomancePlayerModel> Players { get; set; }
     }
 
     public class PlayerPerfomanceDataModel
     {
-        public PlayerPerfomanceMatchModel Match { get; set; }
+        public required PlayerPerfomanceMatchModel Match { get; set; }
     }
 
     public class PerfomanceResponse
     {
-        public PlayerPerfomanceDataModel Data { get; set; }
+        public required PlayerPerfomanceDataModel Data { get; set; }
     }
 
+    public class StatsResponse
+    {
+        [JsonPropertyName("impPerMinute")]
+        public required List<int> ImpactPerMinute { get; set; }
+        public required List<ItemPurchaseResponse> ItemPurchases { get; set; }
+    }
+
+    public class ItemPurchaseResponse
+    {
+        public int ItemId { get; set; }
+        public int Time { get; set; }
+    }
 }
