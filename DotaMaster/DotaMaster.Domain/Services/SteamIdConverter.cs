@@ -1,11 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Numerics;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Numerics;
 
-namespace DotaMaster.Data.IdConverters
+namespace DotaMaster.Domain.Services
 {
     public static class SteamIdConverter
     {
@@ -13,22 +8,16 @@ namespace DotaMaster.Data.IdConverters
 
         public static long SteamIdToDotaId(string steamId)
         {
-            // Разделяем SteamID на части
             var steamIdParts = steamId.Split(':');
             if (steamIdParts.Length != 3)
             {
                 throw new ArgumentException("Invalid SteamID format.");
             }
 
-            // Извлекаем Y и Z
             int y = int.Parse(steamIdParts[1]);
             int z = int.Parse(steamIdParts[2]);
 
-            // Рассчитываем steamacct
             int steamAccount = z * 2 + y;
-
-            // Формируем [U:1:{steamacct}]
-            //return $"[U:1:{steamAccount}]";
             return (long)steamAccount;
         }
 

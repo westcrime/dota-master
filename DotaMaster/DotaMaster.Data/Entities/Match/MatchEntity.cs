@@ -1,20 +1,20 @@
-﻿namespace DotaMaster.Application.Models.Match
+﻿namespace DotaMaster.Data.Entities.Match
 {
-    public class MatchModel
+    public class MatchEntity
     {
         public long MatchId { get; set; }
         public long DotaId { get; set; }
-        public required GeneralInfo GeneralInfo { get; set; }
-        public required UserStats UserStats { get; set; }
-        public required AvgHeroStats AvgHeroStats { get; set; }
-        public required Laning Laning { get; set; }
-        public required Picks Picks { get; set; }
+        public required GeneralInfoEntity GeneralInfo { get; set; }
+        public required UserStatsEntity UserStats { get; set; }
+        public required AvgHeroStatsEntity AvgHeroStats { get; set; }
+        public required LaningEntity Laning { get; set; }
+        public required WinratesEntity Winrates { get; set; }
         public required string WinratesAnalysis { get; set; }
         public required string LaningAnalysis { get; set; }
         public required string ItemsAnalysis { get; set; }
     }
 
-    public class GeneralInfo
+    public class GeneralInfoEntity
     {
         public bool DidRadiantWin { get; set; }
         public int Rank { get; set; }
@@ -23,14 +23,14 @@
         public required List<int> RadiantExperienceLeads { get; set; }
         public required List<int> RadiantKills { get; set; }
         public required List<int> DireKills { get; set; }
-        public required List<PlayerStats> Players { get; set; }
+        public required List<PlayerStatsEntity> Players { get; set; }
     }
     
-    public class PlayerStats
+    public class PlayerStatsEntity
     {
         public required string Position { get; set; }
         public required string SteamAccountId { get; set; }
-        public required Hero Hero { get; set; }
+        public required HeroEntity Hero { get; set; }
         public bool IsRadiant { get; set; }
         public int Networth { get; set; }
         public int Kills { get; set; }
@@ -52,9 +52,9 @@
         public int? Backpack2Id { get; set; }
     }
 
-    public class UserStats
+    public class UserStatsEntity
     {
-        public required Hero HeroId { get; set; }
+        public required HeroEntity HeroId { get; set; }
         public bool IsRadiant { get; set; }
         public int Networth { get; set; }
         public int Kills { get; set; }
@@ -66,16 +66,16 @@
         public int NumLastHits { get; set; }
         public int Imp { get; set; }
         public required List<int> ImpactPerMinute { get; set; }
-        public required List<ItemPurchase> ItemPurchases { get; set; }
+        public required List<ItemPurchaseEntity> ItemPurchases { get; set; }
     }
 
-    public class ItemPurchase
+    public class ItemPurchaseEntity
     {
         public int ItemId { get; set; }
         public int Time { get; set; }
     }
 
-    public class AvgHeroStats
+    public class AvgHeroStatsEntity
     {
         public double TopCore { get; set; }
         public double TopSupport { get; set; }
@@ -90,14 +90,14 @@
         public double XpFed { get; set; }
     }
 
-    public class Hero
+    public class HeroEntity
     {
         public int Id { get; set; }
         public required string Name { get; set; }
         public required string LocalizedName { get; set; }
     }
 
-    public class Laning
+    public class LaningEntity
     {
         public required string Position { get; set; }
         public required string Rank { get; set; }
@@ -113,17 +113,22 @@
         public double AvgLaningNetworth { get; set; }
     }
 
-    public class Picks
+    public class WinratesEntity
     {
-        public int HeroId { get; set; }
-        public double HeroWinrate { get; set; }
-        public required List<HeroWr> HeroWrWithAlliedHeroes { get; set; }
-        public required List<HeroWr> HeroWrWithEnemyHeroes { get; set; }
+        public required List<WinWeekEntity> WinWeek { get; set; }
+        public required List<MatchUpEntity> MatchUp { get; set; }
     }
 
-    public class HeroWr
+    public class WinWeekEntity
     {
-        public double Winrate { get; set; }
+        public int MatchCount { get; set; }
+        public int WinCount { get; set; }
+    }
+
+    public class MatchUpEntity
+    {
         public int HeroId { get; set; }
+        public required List<double> Vs { get; set; }
+        public required List<double> With { get; set; }
     }
 }

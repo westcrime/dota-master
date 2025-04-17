@@ -1,8 +1,8 @@
-﻿using AutoMapper;
-using DotaMaster.API.DTOs;
+﻿using System.Security.Claims;
+using DotaMaster.Application.Models.Match;
 using DotaMaster.Application.Services;
+using DotaMaster.Domain.Exceptions;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
 
 namespace DotaMaster.API.Controllers
 {
@@ -12,89 +12,29 @@ namespace DotaMaster.API.Controllers
     {
         private readonly MatchService _matchService;
         private readonly ILogger<MatchesContoller> _logger;
-        private readonly IMapper _mapper;
 
-        public MatchesContoller(MatchService matchService, ILogger<MatchesContoller> logger, IMapper mapper)
+        public MatchesContoller(MatchService matchService, ILogger<MatchesContoller> logger)
         {
-            _mapper = mapper;
             _matchService = matchService;
             _logger = logger;
         }
 
-        [HttpGet("laning-analyze")]
-        public async Task<IActionResult> GetLaningAnalyze([FromQuery] string matchId)
+        [HttpGet()]
+        public async Task<MatchModel> Get([FromQuery] string matchId)
         {
             if (User.Identity == null || !User.Identity.IsAuthenticated)
             {
-                return Unauthorized(new { Message = "User is not authenticated" });
+                throw new BadRequestException("User is not authenticated");
             }
 
-            // Получение Steam ID из утверждений
-            var steamId = User.FindFirstValue(ClaimTypes.NameIdentifier).Split('/').Last();
+            var steamId = (User.FindFirstValue(ClaimTypes.NameIdentifier)
+                ?? throw new BadRequestException("Steam ID not found in claims")).Split('/').Last();
             if (string.IsNullOrEmpty(steamId))
             {
-                return BadRequest(new { Message = "Steam ID not found in claims" });
+                throw new BadRequestException("Steam ID not found in claims");
             }
 
-            var laningAnalyze = _mapper.Map<LaningAnalyzeDto>(await _matchService.GetLaningAnalyze(steamId, matchId));
-            return Ok(laningAnalyze);
-        }
-
-        [HttpGet("pick-analyze")]
-        public async Task<IActionResult> GetPickAnalyze([FromQuery] string matchId)
-        {
-            if (User.Identity == null || !User.Identity.IsAuthenticated)
-            {
-                return Unauthorized(new { Message = "User is not authenticated" });
-            }
-
-            // Получение Steam ID из утверждений
-            var steamId = User.FindFirstValue(ClaimTypes.NameIdentifier).Split('/').Last();
-            if (string.IsNullOrEmpty(steamId))
-            {
-                return BadRequest(new { Message = "Steam ID not found in claims" });
-            }
-
-            var pickAnalyze = _mapper.Map<PickAnalyzeDto>(await _matchService.GetPickAnalyze(steamId, matchId));
-            return Ok(pickAnalyze);
-        }
-
-        [HttpGet]
-        public async Task<IActionResult> GetMatchInfo([FromQuery] string matchId)
-        {
-            if (User.Identity == null || !User.Identity.IsAuthenticated)
-            {
-                return Unauthorized(new { Message = "User is not authenticated" });
-            }
-
-            // Получение Steam ID из утверждений
-            var steamId = User.FindFirstValue(ClaimTypes.NameIdentifier).Split('/').Last();
-            if (string.IsNullOrEmpty(steamId))
-            {
-                return BadRequest(new { Message = "Steam ID not found in claims" });
-            }
-
-            var matchInfo = _mapper.Map<MatchInfoDto>(await _matchService.GetMatchInfo(long.Parse(matchId)));
-            return Ok(matchInfo);
-        }
-
-        [HttpGet("perfomance")]
-        public async Task<IActionResult> GetMatchPerfomance([FromQuery] string matchId)
-        {
-            if (User.Identity == null || !User.Identity.IsAuthenticated)
-            {
-                return Unauthorized(new { Message = "User is not authenticated" });
-            }
-
-            // Получение Steam ID из утверждений
-            var steamId = User.FindFirstValue(ClaimTypes.NameIdentifier).Split('/').Last();
-            if (string.IsNullOrEmpty(steamId))
-            {
-                return BadRequest(new { Message = "Steam ID not found in claims" });
-            }
-
-            var perfomance = _mapper.Map<GeneralHeroPerfomanceDto>(await _matchService.GetGeneralPerfomance(long.Parse(matchId), steamId));
-            return Ok(perfomance);
+            return await _matchService.Get(steamId, matchId);
         }
     }
 }

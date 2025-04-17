@@ -1,17 +1,18 @@
-using DotaMaster.API.Extensions;
-using DotaMaster.Application.Extensions;
-using Microsoft.AspNetCore.Authentication.Cookies;
+using DotaMaster.API.DI;
+using DotaMaster.Application.DI;
+using DotaMaster.Data.DI;
 
 var builder = WebApplication.CreateBuilder(args);
+var configuration = builder.Configuration;
 builder.Logging.ClearProviders();
 builder.Logging.AddConsole();
 
-// Add services to the container.
-builder.Services.AddExtensions();
+builder.Services.AddApiDI();
+builder.Services.AddDataDI(configuration);
+builder.Services.AddApplicationDI();
+builder.Services.AddAuthDI();
 
 builder.Services.AddControllers();
-
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddHttpClient();
@@ -20,24 +21,17 @@ builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
     {
-        policy.WithOrigins("http://localhost:3000") // URL вашего фронтенда
+        policy.WithOrigins("http://localhost:3000")
               .AllowAnyHeader()
               .AllowAnyMethod()
-              .AllowCredentials(); // Разрешить отправку куков
+              .AllowCredentials();
     });
 });
 
-// Добавление аутентификации
-builder.Services.AddAuthExtensions();
-
-// Добавление авторизации
 builder.Services.AddAuthorization();
-
 builder.Services.AddHttpClient();
 
 var app = builder.Build();
-
-// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -45,12 +39,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseExceptionHandler();
-
 app.UseCors();
-
 app.UseAuthentication();
 app.UseAuthorization();
-
 app.MapControllers();
-
 app.Run();

@@ -1,5 +1,5 @@
 ﻿using DotaMaster.Data.Entities.Profile;
-using DotaMaster.Data.IdConverters;
+using DotaMaster.Domain.Services;
 using DotaMaster.Data.ResponseModels.ProfileResponses;
 using DotaMaster.Domain.Exceptions;
 using Microsoft.Extensions.Configuration;

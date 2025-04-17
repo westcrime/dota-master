@@ -1,11 +1,11 @@
 ﻿using System.Net.Http.Headers;
 using System.Text;
 using AutoMapper;
-using DotaMaster.Data.Entities;
+using DotaMaster.Data.Contexts;
 using DotaMaster.Data.Entities.Match;
-using DotaMaster.Data.IdConverters;
 using DotaMaster.Data.ResponseModels.Match;
 using DotaMaster.Data.ResponseModels.MatchResponses;
+using DotaMaster.Domain.Services;
 using DotaMaster.Domain.Exceptions;
 using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
@@ -15,31 +15,40 @@ namespace DotaMaster.Data.Repositories
 {
     public class MatchRepository
     {
-        private readonly string _steamApiKey;
         private readonly string _stratzApiKey;
         private readonly IConfiguration _configuration;
         private readonly HttpClient _httpClient;
         private readonly IMapper _mapper;
-        private const string _openDotaUrl = "https://api.opendota.com/api";
+        private readonly MatchDbContext _matchDbContext;
         private const string _stratzGraphqlUrl = "https://api.stratz.com/graphql";
 
-        public MatchRepository(IConfiguration configuration, HttpClient httpClient, IMapper mapper)
+        public MatchRepository(IConfiguration configuration, HttpClient httpClient, IMapper mapper, MatchDbContext matchDbContext)
         {
+            _matchDbContext = matchDbContext;
             _mapper = mapper;
             _httpClient = httpClient;
             _configuration = configuration;
-            _steamApiKey = _configuration["Steam:ApiKey"]
-                ?? throw new ArgumentNullException("Steam api key is null!");
             _stratzApiKey = _configuration["StratzApiKey"]
                 ?? throw new ArgumentNullException("Stratz api key is null!");
         }
 
-        public async Task<AvgHeroStats> GetAvgHeroStats(int duration, int heroId, string rankBracket, string pos)
+        public async Task CreateMatch(MatchEntity matchEntity)
         {
-            const string AdditionalInfoQuery = @"query GetAvgHeroStats($duration: Int, $heroId: Short, $rankBracket: RankBracketBasicEnum, $pos: MatchPlayerPositionType) {
+            await _matchDbContext.CreateMatchAsync(matchEntity);
+        }
+
+        public async Task<MatchEntity?> GetMatch(long matchId, long dotaId)
+        {
+            return await _matchDbContext.GetMatchAsync(matchId, dotaId);
+        }
+
+        public async Task<AvgHeroStats> GetAvgHeroStats(int max, int min, int heroId, string rankBracket, string pos)
+        {
+            const string AdditionalInfoQuery = @"query GetAvgHeroStats($max: Int, $min: Int, $heroId: Short, $rankBracket: RankBracketBasicEnum, $pos: MatchPlayerPositionType) {
                   heroStats {
                     stats(
-                      maxTime: $duration
+                      maxTime: $max
+                      minTime: $min
                       heroIds: [$heroId]
                       bracketBasicIds: [$rankBracket]
                       positionIds: [$pos]
@@ -61,9 +70,10 @@ namespace DotaMaster.Data.Repositories
             var requestBody = new
             {
                 query = AdditionalInfoQuery,
-                variables = new { duration, heroId, rankBracket, pos }
+                variables = new { max, min, heroId, rankBracket, pos }
             };
             var response = await SendGraphqlRequest(requestBody);
+            response.EnsureSuccessStatusCode();
             var jsonResponse = await response.Content.ReadAsStringAsync();
             var parsed = JsonConvert.DeserializeObject<Dictionary<string, object>>(jsonResponse)
                 ?? throw new ArgumentNullException("Can not parse GetAvgHeroStats response");
@@ -72,14 +82,13 @@ namespace DotaMaster.Data.Repositories
                 ["heroStats"] ?? throw new BadRequestException("Invalid input data from user"))
                 ["stats"] ?? throw new BadRequestException("Invalid input data from user"))
                 .First() ?? throw new BadRequestException("Invalid input data from user"))
-                .ToObject<AvgHeroStatsResponse>();
+                .ToObject<AvgHeroStatsResponse>() ?? throw new ArgumentNullException("Can not parse to AvgHeroStatsResponse");
 
             return _mapper.Map<AvgHeroStats>(avgHeroStatsResponse);
         }
 
-        public async Task<UserStats> GetUserStats(string steamId, long matchId)
+        public async Task<UserStats> GetUserStats(long dotaId, long matchId)
         {
-            var dotaId = SteamIdConverter.SteamIdToDotaId(SteamIdConverter.GetIDFromCommunity(steamId));
             string graphqlQuery = @"
                 query GetUserStats($matchId: Long!, $dotaId: Long!) {
                   match(id: $matchId) {
@@ -113,6 +122,7 @@ namespace DotaMaster.Data.Repositories
                 variables = new { matchId, dotaId }
             };
             var response = await SendGraphqlRequest(requestBody);
+            response.EnsureSuccessStatusCode();
             var jsonResponse = await response.Content.ReadAsStringAsync();
             var parsed = JsonConvert.DeserializeObject<Dictionary<string, object>>(jsonResponse)
                 ?? throw new ArgumentNullException("Can not parse GetBasicInfoAsync response");
@@ -121,7 +131,7 @@ namespace DotaMaster.Data.Repositories
                 ["match"] ?? throw new BadRequestException("Invalid match id or dota id"))
                 ["players"] ?? throw new BadRequestException("Invalid match id or dota id"))
                 .First ?? throw new BadRequestException("Invalid match id or dota id"))
-                .ToObject<UserStatsResponse>();
+                .ToObject<UserStatsResponse>() ?? throw new ArgumentNullException("Can not parse to UserStatsResponse");
 
             return _mapper.Map<UserStats>(userStatsResponse);
         }
@@ -168,60 +178,49 @@ namespace DotaMaster.Data.Repositories
                 variables = new { matchId }
             };
             var response = await SendGraphqlRequest(requestBody);
+            response.EnsureSuccessStatusCode();
             var jsonResponse = await response.Content.ReadAsStringAsync();
             var parsed = JsonConvert.DeserializeObject<Dictionary<string, object>>(jsonResponse)
                 ?? throw new ArgumentNullException("Can not parse GetMatchInfo response");
-            var userStatsResponse = (((((JObject)parsed["data"])
+            var matchInfoResponse = (((JObject)parsed["data"])
                 ["match"] ?? throw new BadRequestException("Invalid match id or dota id"))
-                ["players"] ?? throw new BadRequestException("Invalid match id or dota id"))
-                .First ?? throw new BadRequestException("Invalid match id or dota id"))
-                .ToObject<MatchInfoResponse>();
-            return _mapper.Map<MatchInfo>(response);
+                .ToObject<MatchInfoResponse>() ?? throw new ArgumentNullException("Can not parse to MatchInfoResponse");
+            return _mapper.Map<MatchInfo>(matchInfoResponse);
         }
 
-        public async Task<PickAnalyze> GetPickAnalyzeAsync(long matchId, string steamId, int take = 125)
+        public async Task<PickInfo> GetPickAsync(string rank, string rankBracket, long dotaId, int heroId, string position, List<int> alliedHeroes, List<int> enemyHeroes, int take = 125) 
         {
-            var dotaId = SteamIdConverter.SteamIdToDotaId(SteamIdConverter.GetIDFromCommunity(steamId));
-            var additionalInfo = await GetInfoAboutUserInMatch(dotaId, matchId)
-                ?? throw new InvalidOperationException($"Can't get additional info for match {matchId} for account {dotaId}");
-
-            var (rank, rankBracket) = GetRankInfo(additionalInfo.Data.Match.Rank);
-            var heroId = additionalInfo.Data.Match.Players.First().HeroId;
-            var position = additionalInfo.Data.Match.Players.First().Position;
-
-            string graphqlUrl = "https://api.stratz.com/graphql";
-            string graphqlQuery = @"
-                query GetHeroWinrates($heroId: Short, $heroIds: [Short], $take: Int, $rank: RankBracket, $rankBracket: RankBracketBasicEnum, $pos: MatchPlayerPositionType) {
-                    heroStats {
-                        winWeek(
-                            heroIds: [$heroId]
-                            gameModeIds: [ALL_PICK_RANKED]
-                            bracketIds: [$rank]
-                            positionIds: [$pos]
-                        ) {
-                            matchCount
-                            winCount
-                        }
-                        matchUp(
-                            heroId: $heroId
-                            heroIds: $heroIds
-                            bracketBasicIds: [$rankBracket]
-                            take: $take
-                        ) {
-                            heroId
-                            vs {
-                                heroId1
-                                heroId2
-                                winsAverage
-                            }
-                            with {
-                                heroId1
-                                heroId2
-                                winsAverage
-                            }
-                        }
-                    }
-                }";
+            string graphqlQuery = @"query GetHeroWinrates($heroId: Short, $heroIds: [Short], $take: Int, $rank: RankBracket, $rankBracket: RankBracketBasicEnum, $pos: MatchPlayerPositionType) {
+              heroStats {
+                winWeek(
+                  heroIds: [$heroId]
+                  gameModeIds: [ALL_PICK_RANKED]
+                  bracketIds: [$rank]
+                  positionIds: [$pos]
+                ) {
+                  matchCount
+                  winCount
+                }
+                matchUp(
+                  heroId: $heroId
+                  heroIds: $heroIds
+                  bracketBasicIds: [$rankBracket]
+                  take: $take
+                ) {
+                  heroId
+                  vs {
+                    heroId1
+                    heroId2
+                    winsAverage
+                  }
+                  with {
+                    heroId1
+                    heroId2
+                    winsAverage
+                  }
+                }
+              }
+            }";
 
             var requestBody = new
             {
@@ -229,61 +228,35 @@ namespace DotaMaster.Data.Repositories
                 variables = new { heroId, rank, rankBracket, take, pos = position }
             };
 
-            var winratesInfo = await SendGraphqlRequest<WinratesResponse>(graphqlUrl, requestBody);
-
-            var heroesInMatchInfo = await GetGeneralMatchInfo(matchId);
-            var userIsRadiant = heroesInMatchInfo.Data.Match.Players.Single(p => p.HeroId == heroId).IsRadiant;
-
-            var alliedHeroes = heroesInMatchInfo.Data.Match.Players
-                .Where(p => p.IsRadiant == userIsRadiant && p.HeroId != heroId)
-                .Select(p => p.HeroId)
-                .ToList();
-
-            var enemyHeroes = heroesInMatchInfo.Data.Match.Players
-                .Where(p => p.IsRadiant != userIsRadiant)
-                .Select(p => p.HeroId)
-                .ToList();
-
+            var response = await SendGraphqlRequest(requestBody);
+            response.EnsureSuccessStatusCode();
+            var jsonResponse = await response.Content.ReadAsStringAsync();
+            var parsed = JsonConvert.DeserializeObject<Dictionary<string, object>>(jsonResponse)
+                ?? throw new ArgumentNullException("Can not parse GetPickAnalyzeAsync response");
+            var winratesResponse = (((JObject)parsed["data"])
+                ["heroStats"] ?? throw new BadRequestException("Invalid parameters"))
+                .ToObject<WinratesResponse>() ?? throw new ArgumentNullException("Can not parse to WinratesResponse");
             ValidateHeroCounts(alliedHeroes, enemyHeroes);
 
             var alliedWinrates = alliedHeroes.Select(ally => new HeroWrInfo
             {
                 HeroId = ally,
-                Winrate = winratesInfo.Data.HeroStats.MatchUp.First().With.Single(h => h.HeroId2 == ally).WinsAverage
+                Winrate = winratesResponse.MatchUp.First().With.Single(h => h.HeroId2 == ally).WinsAverage
             }).ToList();
 
             var enemyWinrates = enemyHeroes.Select(enemy => new HeroWrInfo
             {
                 HeroId = enemy,
-                Winrate = winratesInfo.Data.HeroStats.MatchUp.First().Vs.Single(h => h.HeroId2 == enemy).WinsAverage
+                Winrate = winratesResponse.MatchUp.First().Vs.Single(h => h.HeroId2 == enemy).WinsAverage
             }).ToList();
 
-            return new PickAnalyze
+            return new PickInfo
             {
                 HeroId = heroId,
-                HeroWinrate = (double)winratesInfo.Data.HeroStats.WinWeek.Last().WinCount /
-                              winratesInfo.Data.HeroStats.WinWeek.Last().MatchCount,
+                HeroWinrate = (double)winratesResponse.WinWeek.Last().WinCount /
+                              winratesResponse.WinWeek.Last().MatchCount,
                 HeroWrWithAlliedHeroes = alliedWinrates,
                 HeroWrWithEnemyHeroes = enemyWinrates
-            };
-        }
-
-        private static (string rank, string rankBracket) GetRankInfo(int matchRank)
-        {
-            if (matchRank <= 0)
-                return ("UNCALIBRATED", "UNCALIBRATED");
-
-            return matchRank switch
-            {
-                > 10 and < 20 => ("HERALD", "HERALD_GUARDIAN"),
-                >= 20 and < 30 => ("GUARDIAN", "HERALD_GUARDIAN"),
-                >= 30 and < 40 => ("CRUSADER", "CRUSADER_ARCHON"),
-                >= 40 and < 50 => ("ARCHON", "CRUSADER_ARCHON"),
-                >= 50 and < 60 => ("LEGEND", "LEGEND_ANCIENT"),
-                >= 60 and < 70 => ("ANCIENT", "LEGEND_ANCIENT"),
-                >= 70 and < 80 => ("DIVINE", "DIVINE_IMMORTAL"),
-                >= 80 and < 90 => ("IMMORTAL", "DIVINE_IMMORTAL"),
-                _ => ("UNKNOWN", "UNKNOWN")
             };
         }
 
@@ -293,10 +266,8 @@ namespace DotaMaster.Data.Repositories
                 throw new InvalidOperationException("Wrong number of allied or enemy heroes.");
         }
 
-        public async Task<Laning> GetLaningAsync(string rank, int heroId, string pos, long matchId, string steamId)
+        public async Task<Laning> GetLaningAsync(string rank, int heroId, string pos, long matchId, long dotaId)
         {
-            var dotaId = SteamIdConverter.SteamIdToDotaId(SteamIdConverter.GetIDFromCommunity(steamId));
-
             string graphqlQuery = @"
                 query GetLaneAnalyze($matchId: Long!, $pos: [MatchPlayerPositionType], $heroId: Short, $dotaId: Long, $rank: RankBracketBasicEnum) {
                     match(id: $matchId) {
@@ -339,6 +310,7 @@ namespace DotaMaster.Data.Repositories
                 }
             };
             var response = await SendGraphqlRequest(requestBody);
+            response.EnsureSuccessStatusCode();
             var jsonResponse = await response.Content.ReadAsStringAsync();
             var parsed = JsonConvert.DeserializeObject<Dictionary<string, object>>(jsonResponse)
                 ?? throw new ArgumentNullException("Can not parse GetLaningAsync response");
@@ -349,8 +321,7 @@ namespace DotaMaster.Data.Repositories
                 ["stats"] ?? throw new BadRequestException("Invalid input data"))
                 .ToObject<LaningResponse>() ?? throw new BadRequestException("Can not parse to LaningResponse");
 
-            var avgLaningResponse = ((((((JObject)parsed["data"])
-                ["match"] ?? throw new BadRequestException("Invalid input data"))
+            var avgLaningResponse = (((((JObject)parsed["data"])
                 ["heroStats"] ?? throw new BadRequestException("Invalid input data"))
                 ["stats"] ?? throw new BadRequestException("Invalid input data"))
                 .First ?? throw new BadRequestException("Invalid input data"))
@@ -369,8 +340,8 @@ namespace DotaMaster.Data.Repositories
                 Rank = rank,
                 LaningCs = laningResponse.LastHitsPerMinute.Take(10).Sum(),
                 LaningNetworth = laningResponse.NetworthPerMinute[9],
-                LaningDeaths = laningResponse.DeathEvents.Count(d => d < 600),
-                LaningKills = laningResponse.KillEvents.Count(k => k < 600)
+                LaningDeaths = laningResponse.DeathEvents.Count(d => d.Time < 600),
+                LaningKills = laningResponse.KillEvents.Count(k => k.Time < 600)
             };
         }
 

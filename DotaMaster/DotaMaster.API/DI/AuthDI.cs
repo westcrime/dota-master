@@ -1,21 +1,17 @@
-﻿using DotaMaster.API.MappingProfiles;
-using DotaMaster.Application.Extensions;
-using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.IdentityModel.Tokens;
-using System.Text;
+﻿using Microsoft.AspNetCore.Authentication.Cookies;
 
-namespace DotaMaster.API.Extensions
+namespace DotaMaster.API.DI
 {
-    public static class AuthExtensions
+    public static class AuthDI
     {
-        public static IServiceCollection AddAuthExtensions(this IServiceCollection services)
+        public static IServiceCollection AddAuthDI(this IServiceCollection services)
         {
             services.AddAuthentication(options =>
             {
                 options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
                 options.DefaultChallengeScheme = "Steam";
             })
-            .AddCookie() // Добавляем Cookie аутентификацию
+            .AddCookie()
             .AddSteam(options =>
             {
                 options.SignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;

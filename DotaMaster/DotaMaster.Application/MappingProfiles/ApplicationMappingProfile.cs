@@ -1,8 +1,10 @@
 ﻿using DotaMaster.Application.Models;
+using DotaMaster.Application.Models.Match;
 using DotaMaster.Application.Models.Profile;
 using DotaMaster.Data.Entities;
 using DotaMaster.Data.Entities.Match;
 using DotaMaster.Data.Entities.Profile;
+using DotaMaster.Data.ResponseModels.MatchResponses;
 
 namespace DotaMaster.Application.MappingProfiles
 {
@@ -18,18 +20,16 @@ namespace DotaMaster.Application.MappingProfiles
             CreateMap<MatchBasicInfo, MatchBasicInfoModel>();
 
             // Match mapping
-            CreateMap<Laning, LaningAnalyzeModel>();
-            CreateMap<MatchInfo, MatchInfoModel>();
-            CreateMap<PlayerPerfomance, PlayerPerfomanceModel>();
-            CreateMap<HeroWrInfo, HeroWrInfoModel>();
-            CreateMap<PickAnalyze, PickAnalyzeModel>();
-
-            CreateMap<HeroPlayerPerfomance, HeroPlayerPerfomanceModel>();
-            CreateMap<AvgHeroPerfomance, AvgHeroPerfomanceModel>();
-            CreateMap<AvgHeroStats, GeneralHeroPerfomanceModel>();
+            CreateMap<MatchEntity, MatchModel>();
+            CreateMap<MatchModel, MatchEntity>();
+            CreateMap<Data.Entities.Match.AvgHeroStats, Models.Match.AvgHeroStats>();
+            CreateMap<Data.Entities.Match.MatchInfo, Models.Match.GeneralInfo>();
+            CreateMap<Data.Entities.Match.UserStats, Models.Match.UserStats>();
+            CreateMap<Data.Entities.Match.Laning, Models.Match.Laning>();
+            CreateMap<Data.Entities.Match.PickInfo, Models.Match.Picks>();
 
             // Hero mapping
-            CreateMap<Hero, HeroModel>();
+            CreateMap<Data.Entities.Hero, HeroModel>();
 
             // Item mapping
             CreateMap<Item, ItemModel>();
