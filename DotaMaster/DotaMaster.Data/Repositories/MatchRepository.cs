@@ -5,7 +5,6 @@ using DotaMaster.Data.Contexts;
 using DotaMaster.Data.Entities.Match;
 using DotaMaster.Data.ResponseModels.Match;
 using DotaMaster.Data.ResponseModels.MatchResponses;
-using DotaMaster.Domain.Services;
 using DotaMaster.Domain.Exceptions;
 using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
@@ -133,7 +132,11 @@ namespace DotaMaster.Data.Repositories
                 .First ?? throw new BadRequestException("Invalid match id or dota id"))
                 .ToObject<UserStatsResponse>() ?? throw new ArgumentNullException("Can not parse to UserStatsResponse");
 
-            return _mapper.Map<UserStats>(userStatsResponse);
+            var userStats = _mapper.Map<UserStats>(userStatsResponse);
+            userStats.ImpactPerMinute = userStatsResponse.Stats.ImpPerMinute;
+            userStats.ItemPurchases = userStatsResponse.Stats.ItemPurchases;
+
+            return userStats;
         }
 
         public async Task<MatchInfo> GetMatchInfo(long matchId)

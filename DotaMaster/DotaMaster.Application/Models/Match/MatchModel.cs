@@ -30,7 +30,7 @@
     {
         public required string Position { get; set; }
         public required string SteamAccountId { get; set; }
-        public required Hero Hero { get; set; }
+        public int HeroId { get; set; }
         public bool IsRadiant { get; set; }
         public int Networth { get; set; }
         public int Kills { get; set; }
@@ -54,7 +54,7 @@
 
     public class UserStats
     {
-        public required Hero HeroId { get; set; }
+        public int HeroId { get; set; }
         public bool IsRadiant { get; set; }
         public int Networth { get; set; }
         public int Kills { get; set; }
@@ -88,13 +88,6 @@
         public double HeroDamage { get; set; }
         public double GoldFed { get; set; }
         public double XpFed { get; set; }
-    }
-
-    public class Hero
-    {
-        public int Id { get; set; }
-        public required string Name { get; set; }
-        public required string LocalizedName { get; set; }
     }
 
     public class Laning

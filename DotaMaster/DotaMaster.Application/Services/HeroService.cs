@@ -22,7 +22,7 @@ namespace DotaMaster.Application.Services
 
         public async Task<IEnumerable<HeroModel>> GetHeroesInfo()
         {
-            var heroes = await _heroRepository.GetHeroesInfo();
+            var heroes = await _heroRepository.GetHeroes();
             return _mapper.Map<IEnumerable<HeroModel>>(heroes);
         }
     }

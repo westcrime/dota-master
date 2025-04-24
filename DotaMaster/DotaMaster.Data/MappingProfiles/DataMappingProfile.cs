@@ -1,5 +1,7 @@
 ﻿using AutoMapper;
+using DotaMaster.Data.Entities;
 using DotaMaster.Data.Entities.Match;
+using DotaMaster.Data.ResponseModels.Hero;
 using DotaMaster.Data.ResponseModels.Match;
 
 namespace DotaMaster.Data.MappingProfiles
@@ -12,6 +14,7 @@ namespace DotaMaster.Data.MappingProfiles
             CreateMap<MatchInfoResponse, MatchInfo>();
             CreateMap<UserStatsResponse, UserStats>();
             CreateMap<AvgHeroStatsResponse, AvgHeroStats>();
+            CreateMap<HeroResponse, Hero>();
         }
     }
 }

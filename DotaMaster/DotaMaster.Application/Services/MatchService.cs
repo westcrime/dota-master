@@ -9,11 +9,12 @@ using Newtonsoft.Json;
 
 namespace DotaMaster.Application.Services
 {
-    public class MatchService(MatchRepository matchRepository, ItemRepository itemRepository, IMapper mapper, AiRepository aiRepository)
+    public class MatchService(MatchRepository matchRepository, ItemRepository itemRepository, HeroRepository heroRepository, IMapper mapper, AiRepository aiRepository)
     {
         private const string template = "Ответь на русском. Не используй специальные знаки для декорации текста, только сплошной текст. Обращение от 2 лица к игроку. Максмальная длина - до 100 слов. Дай также советы чтобы улучшить этот аспект.";
         private readonly MatchRepository _matchRepository = matchRepository;
         private readonly ItemRepository _itemRepository = itemRepository;
+        private readonly HeroRepository _heroRepository = heroRepository;
         private readonly AiRepository _aiRepository = aiRepository;
         private readonly IMapper _mapper = mapper;
 
@@ -42,6 +43,7 @@ namespace DotaMaster.Application.Services
 
             StringBuilder aiRequest = new StringBuilder();
             aiRequest.Append(JsonConvert.SerializeObject((await _itemRepository.GetAllItemsAsync()).Select(i => $"{i.Id} {i.Title}"), Formatting.Indented));
+            aiRequest.Append(JsonConvert.SerializeObject((await _heroRepository.GetHeroes()).Select(h => $"{h.Id} {h.DisplayName}"), Formatting.Indented));
             aiRequest.Append(JsonConvert.SerializeObject(generalInfo, Formatting.Indented));
             aiRequest.Append(JsonConvert.SerializeObject(userStats, Formatting.Indented));
             aiRequest.Append(JsonConvert.SerializeObject(avgHeroStats, Formatting.Indented));
@@ -75,7 +77,7 @@ namespace DotaMaster.Application.Services
                 Picks = _mapper.Map<Picks>(picks)
             };
 
-            //await _matchRepository.CreateMatch(_mapper.Map<MatchEntity>(matchModel));
+            await _matchRepository.CreateMatch(_mapper.Map<MatchEntity>(matchModel));
 
             return matchModel;
         }

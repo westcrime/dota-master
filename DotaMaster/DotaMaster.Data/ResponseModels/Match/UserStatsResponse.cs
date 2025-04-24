@@ -1,4 +1,6 @@
-﻿namespace DotaMaster.Data.ResponseModels.Match
+﻿using DotaMaster.Data.Entities.Match;
+
+namespace DotaMaster.Data.ResponseModels.Match
 {
     public class UserStatsResponse
     {
@@ -14,13 +16,12 @@
         public int NumDenies { get; set; }
         public int NumLastHits { get; set; }
         public int Imp { get; set; }
-        public required List<int> ImpactPerMinute { get; set; }
-        public required List<ItemPurchase> ItemPurchases { get; set; }
+        public required Stats Stats { get; set; }
     }
 
-    public class ItemPurchase
+    public class Stats
     {
-        public int ItemId { get; set; }
-        public int Time { get; set; }
+        public required List<int> ImpPerMinute { get; set; }
+        public required List<ItemPurchase> ItemPurchases { get; set; }
     }
 }

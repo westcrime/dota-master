@@ -1,4 +1,4 @@
 ﻿namespace DotaMaster.Application.Models
 {
-    public record HeroModel(int Id, string Name, string LocalizedName);
+    public record HeroModel(int Id, string Name, string DisplayName);
 }
