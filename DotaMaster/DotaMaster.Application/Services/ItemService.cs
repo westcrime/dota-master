@@ -1,26 +1,15 @@
 ﻿using AutoMapper;
 using DotaMaster.Application.Models;
 using DotaMaster.Data.Repositories;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace DotaMaster.Application.Services
 {
-    public class ItemService
+    public class ItemService(ItemRepository itemRepository, IMapper mapper)
     {
-        private readonly ItemRepository _itemRepository;
-        private readonly IMapper _mapper;
+        private readonly ItemRepository _itemRepository = itemRepository;
+        private readonly IMapper _mapper = mapper;
 
-        public ItemService(ItemRepository itemRepository, IMapper mapper)
-        {
-            _itemRepository = itemRepository;
-            _mapper = mapper;
-        }
-
-        public async Task<IEnumerable<ItemModel>> GetAllItems()
+        public async Task<IEnumerable<ItemModel>> Get()
         {
             var items = await _itemRepository.GetAllItemsAsync();
             return _mapper.Map<IEnumerable<ItemModel>>(items);

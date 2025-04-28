@@ -4,16 +4,10 @@ using DotaMaster.Data.Repositories;
 
 namespace DotaMaster.Application.Services
 {
-    public class ProfileService
+    public class ProfileService(ProfileRepository profileRepository, IMapper mapper)
     {
-        private readonly ProfileRepository _profileRepository;
-        private readonly IMapper _mapper;
-
-        public ProfileService(ProfileRepository profileRepository, IMapper mapper) 
-        {
-            _profileRepository = profileRepository;
-            _mapper = mapper;
-        }
+        private readonly ProfileRepository _profileRepository = profileRepository;
+        private readonly IMapper _mapper = mapper;
 
         public async Task<SteamProfileModel> GetProfile(string steamId)
         {

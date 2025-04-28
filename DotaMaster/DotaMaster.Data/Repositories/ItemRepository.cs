@@ -1,6 +1,6 @@
 ﻿using System.Text.Json;
 using DotaMaster.Data.Entities;
-using DotaMaster.Data.ResponseModels.ItemResponses;
+using DotaMaster.Data.ResponseModels.Items;
 
 namespace DotaMaster.Data.Repositories
 {
@@ -30,7 +30,7 @@ namespace DotaMaster.Data.Repositories
                     Id = itemResponse.Id,
                     Title = itemResponse.Dname ?? "No Title Available",
                     Lore = itemResponse.Lore ?? "No Lore Available",
-                    Cost = itemResponse.Cost ?? 0,
+                    Cost = itemResponse.Cost,
                     Description = itemResponse.Abilities?.FirstOrDefault()?.Description ?? "No Description Available",
                     IconUrl = !string.IsNullOrEmpty(itemResponse.Img)
                            ? _dotaIconsUrl + itemResponse.Img

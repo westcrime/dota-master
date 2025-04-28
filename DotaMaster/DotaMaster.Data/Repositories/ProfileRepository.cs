@@ -1,12 +1,11 @@
 ﻿using DotaMaster.Data.Entities.Profile;
 using DotaMaster.Domain.Services;
-using DotaMaster.Data.ResponseModels.ProfileResponses;
-using DotaMaster.Domain.Exceptions;
 using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System.Net.Http.Headers;
 using System.Text;
+using DotaMaster.Data.ResponseModels.Profile;
 
 namespace DotaMaster.Data.Repositories
 {
@@ -171,7 +170,7 @@ namespace DotaMaster.Data.Repositories
             string recentMatchesUrl = $"{_openDotaUrl}/players/{dotaId}/recentMatches";
             var recentMatchesResponse = await _httpClient.GetAsync(recentMatchesUrl);
             var recentMatches = JsonConvert.DeserializeObject<RecentMatchIdResponse[]>(await recentMatchesResponse.Content.ReadAsStringAsync())
-                ?? throw new PrivateProfileException($"Profile {steamId} is private!");
+                ?? throw new ArgumentNullException($"Profile {steamId} is private!");
 
             string query = @"
                 query GetUser($userId: Long!, $matchIds: [Long]) {

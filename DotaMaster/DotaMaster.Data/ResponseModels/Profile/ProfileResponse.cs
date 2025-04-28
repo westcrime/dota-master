@@ -1,10 +1,9 @@
 ﻿using Newtonsoft.Json;
 
-namespace DotaMaster.Data.ResponseModels.ProfileResponses
+namespace DotaMaster.Data.ResponseModels.Profile
 {
     public class Player
     {
-        [JsonProperty("steamid")]
         public required string SteamId { get; set; }
 
         [JsonProperty("personaname")]

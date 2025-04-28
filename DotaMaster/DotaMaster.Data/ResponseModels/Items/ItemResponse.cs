@@ -1,27 +1,18 @@
-﻿using System.Text.Json.Serialization;
-
-namespace DotaMaster.Data.ResponseModels.ItemResponses
+﻿namespace DotaMaster.Data.ResponseModels.Items
 {
     public class ItemResponse
     {
-        [JsonPropertyName("id")]
         public int Id { get; set; }
-        [JsonPropertyName("dname")]
-        public string? Dname { get; set; }
+        public required string Dname { get; set; }
 
-        [JsonPropertyName("lore")]
-        public string? Lore { get; set; }
-        [JsonPropertyName("cost")]
-        public int? Cost { get; set; }
-        [JsonPropertyName("img")]
+        public required string Lore { get; set; }
+        public int Cost { get; set; }
         public required string Img { get; set; }
-        [JsonPropertyName("abilities")]
-        public Abilities[]? Abilities { get; set; }
+        public required Abilities[] Abilities { get; set; }
     }
 
     public class Abilities
     {
-        [JsonPropertyName("description")]
         public string? Description { get; set; }
     }
 }

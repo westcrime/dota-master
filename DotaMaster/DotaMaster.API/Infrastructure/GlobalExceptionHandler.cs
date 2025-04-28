@@ -4,14 +4,9 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace DotaMaster.API.Infrastructure
 {
-    internal sealed class GlobalExceptionHandler : IExceptionHandler
+    internal sealed class GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logger) : IExceptionHandler
     {
-        private readonly ILogger<GlobalExceptionHandler> _logger;
-
-        public GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logger)
-        {
-            _logger = logger;
-        }
+        private readonly ILogger<GlobalExceptionHandler> _logger = logger;
 
         public async ValueTask<bool> TryHandleAsync(
             HttpContext httpContext,
@@ -20,23 +15,19 @@ namespace DotaMaster.API.Infrastructure
         {
             _logger.LogError(
                 exception, "Exception occurred: {Message}", exception.Message);
-
-            var problemDetails = new ProblemDetails();
-
-            if (exception is PrivateProfileException privateProfileException)
+            ProblemDetails? problemDetails;
+            if (exception is BadRequestException badRequestException)
             {
-                // Обработка BadRequestException
                 problemDetails = new ProblemDetails
                 {
                     Status = StatusCodes.Status400BadRequest,
                     Title = "Bad Request",
-                    Detail = privateProfileException.Message
+                    Detail = badRequestException.Message
                 };
                 httpContext.Response.StatusCode = StatusCodes.Status400BadRequest;
             }
             else
             {
-                // Обработка всех других исключений
                 problemDetails = new ProblemDetails
                 {
                     Status = StatusCodes.Status500InternalServerError,

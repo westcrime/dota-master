@@ -8,20 +8,15 @@ namespace DotaMaster.API.Controllers
 {
     [ApiController]
     [Route("matches")]
-    public class MatchesContoller : ControllerBase
+    public class MatchesContoller(MatchService matchService, ILogger<MatchesContoller> logger) : ControllerBase
     {
-        private readonly MatchService _matchService;
-        private readonly ILogger<MatchesContoller> _logger;
-
-        public MatchesContoller(MatchService matchService, ILogger<MatchesContoller> logger)
-        {
-            _matchService = matchService;
-            _logger = logger;
-        }
+        private readonly MatchService _matchService = matchService;
+        private readonly ILogger<MatchesContoller> _logger = logger;
 
         [HttpGet()]
         public async Task<MatchModel> Get([FromQuery] string matchId)
         {
+            _logger.LogInformation($"Match {matchId} is requested");
             if (User.Identity == null || !User.Identity.IsAuthenticated)
             {
                 throw new BadRequestException("User is not authenticated");

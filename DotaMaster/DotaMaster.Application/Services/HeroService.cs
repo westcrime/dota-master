@@ -1,26 +1,15 @@
 ﻿using AutoMapper;
 using DotaMaster.Application.Models;
 using DotaMaster.Data.Repositories;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace DotaMaster.Application.Services
 {
-    public class HeroService
+    public class HeroService(HeroRepository heroRepository, IMapper mapper)
     {
-        private readonly HeroRepository _heroRepository;
-        private readonly IMapper _mapper;
+        private readonly HeroRepository _heroRepository = heroRepository;
+        private readonly IMapper _mapper = mapper;
 
-        public HeroService(HeroRepository heroRepository, IMapper mapper)
-        {
-            _heroRepository = heroRepository;
-            _mapper = mapper;
-        }
-
-        public async Task<IEnumerable<HeroModel>> GetHeroesInfo()
+        public async Task<IEnumerable<HeroModel>> Get()
         {
             var heroes = await _heroRepository.GetHeroes();
             return _mapper.Map<IEnumerable<HeroModel>>(heroes);

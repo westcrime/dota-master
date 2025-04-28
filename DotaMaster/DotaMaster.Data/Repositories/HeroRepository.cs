@@ -1,11 +1,8 @@
 ﻿using System.Net.Http.Headers;
 using System.Text;
 using AutoMapper;
-using DotaMaster.Data.DI;
 using DotaMaster.Data.Entities;
 using DotaMaster.Data.ResponseModels.Hero;
-using DotaMaster.Data.ResponseModels.Match;
-using DotaMaster.Domain.Exceptions;
 using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -29,7 +26,7 @@ namespace DotaMaster.Data.Repositories
                 ?? throw new ArgumentNullException("Stratz api key is null!");
         }
 
-        public async Task<IEnumerable<Entities.Hero>> GetHeroes()
+        public async Task<IEnumerable<Hero>> GetHeroes()
         {
             string graphqlQuery = @"
                 query GetHeroes {
@@ -54,7 +51,7 @@ namespace DotaMaster.Data.Repositories
             var heroResponse = ((((JObject)parsed["data"])
                 ["constants"] ?? throw new ArgumentNullException("Can not parse GetHeroes response"))
                 ["heroes"] ?? throw new ArgumentNullException("Can not parse GetHeroes response"))
-                .ToObject<List<HeroResponse>>() ?? throw new BadRequestException("Can not parse to HeroResponse");
+                .ToObject<List<HeroResponse>>() ?? throw new ArgumentNullException("Can not parse to HeroResponse");
             return _mapper.Map<List<Hero>>(heroResponse);
         }
 

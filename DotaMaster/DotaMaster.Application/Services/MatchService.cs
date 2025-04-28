@@ -1,5 +1,4 @@
-﻿using System.Linq;
-using System.Text;
+﻿using System.Text;
 using AutoMapper;
 using DotaMaster.Application.Models.Match;
 using DotaMaster.Data.Entities.Match;
@@ -60,7 +59,7 @@ namespace DotaMaster.Application.Services
             var laningAdvice = await _aiRepository.AskAi(aiLaningRequest.ToString());
 
             StringBuilder aiItemsRequest = new StringBuilder(aiRequest.ToString());
-            aiItemsRequest.Append("Дай анализ покупки предметов героя для игрока, исходя из информации объектов (времени приобретения и героев против и за игрока). Не затрагивай другие аспекты, только Предметы и их актуальность");
+            aiItemsRequest.Append("Дай анализ покупки предметов героя для игрока, исходя из информации объектов (времени приобретения (переврди в минуты и секунды время) и героев против и за игрока). Не затрагивай другие аспекты, только Предметы и их актуальность");
             var itemsAdvice = await _aiRepository.AskAi(aiItemsRequest.ToString());
 
             var matchModel = new MatchModel()

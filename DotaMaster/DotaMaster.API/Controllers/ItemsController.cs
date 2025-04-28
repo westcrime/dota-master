@@ -1,5 +1,4 @@
-﻿using AutoMapper;
-using DotaMaster.API.DTOs;
+﻿using DotaMaster.Application.Models;
 using DotaMaster.Application.Services;
 using Microsoft.AspNetCore.Mvc;
 
@@ -7,24 +6,16 @@ namespace DotaMaster.API.Controllers
 {
     [ApiController]
     [Route("items")]
-    public class ItemsController : ControllerBase
+    public class ItemsController(ItemService itemService, ILogger<ItemsController> logger) : ControllerBase
     {
-        private readonly ItemService _itemService;
-        private readonly ILogger<ItemsController> _logger;
-        private readonly IMapper _mapper;
-
-        public ItemsController(ItemService itemService, ILogger<ItemsController> logger, IMapper mapper)
-        {
-            _itemService = itemService;
-            _logger = logger;
-            _mapper = mapper;
-        }
+        private readonly ItemService _itemService = itemService;
+        private readonly ILogger<ItemsController> _logger = logger;
 
         [HttpGet]
-        public async Task<ActionResult> GetAllItems()
+        public async Task<IEnumerable<ItemModel>> Get()
         {
-            var itemModels = await _itemService.GetAllItems();
-            return Ok(_mapper.Map<IEnumerable<ItemDto>>(itemModels));
+            _logger.LogInformation("ItemsRequested");
+            return await _itemService.Get();
         }
     }
 }

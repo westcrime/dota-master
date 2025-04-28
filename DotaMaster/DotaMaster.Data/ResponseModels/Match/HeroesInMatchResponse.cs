@@ -1,4 +1,4 @@
-﻿namespace DotaMaster.Data.ResponseModels.MatchResponses
+﻿namespace DotaMaster.Data.ResponseModels.Match
 {
     public class HeroesInMatchResponse
     {

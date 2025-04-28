@@ -1,5 +1,4 @@
-﻿using DotaMaster.Data.ResponseModels.ProfileResponses;
-using MongoDB.Bson.Serialization.Attributes;
+﻿using MongoDB.Bson.Serialization.Attributes;
 using MongoDB.Bson;
 
 namespace DotaMaster.Data.Entities.Match

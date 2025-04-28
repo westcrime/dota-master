@@ -1,17 +1,15 @@
 ﻿using Newtonsoft.Json;
 using System.Text.Json;
 
-namespace DotaMaster.Data.ResponseModels.ProfileResponses
+namespace DotaMaster.Data.ResponseModels.Profile
 {
     public class HeroStatsResponse
     {
-        [JsonProperty("data")]
         public required Data Data { get; set; }
     }
 
     public class Data
     {
-        [JsonProperty("player")]
         public required PlayerData Player { get; set; }
     }
 
@@ -23,28 +21,13 @@ namespace DotaMaster.Data.ResponseModels.ProfileResponses
 
     public class Stat
     {
-        [JsonProperty("heroId")]
         public int HeroId { get; set; }
-
-        [JsonProperty("hero")]
         public required Hero Hero { get; set; }
-
-        [JsonProperty("matchCount")]
         public int MatchCount { get; set; }
-
-        [JsonProperty("winCount")]
         public int WinCount { get; set; }
-
-        [JsonProperty("avgKills")]
         public double AvgKills { get; set; }
-
-        [JsonProperty("avgDeaths")]
         public double AvgDeaths { get; set; }
-
-        [JsonProperty("avgAssists")]
         public double AvgAssists { get; set; }
-
-        [JsonProperty("duration")]
         public double Duration { get; set; }
 
         [JsonProperty("goldPerMinute")]
@@ -59,7 +42,6 @@ namespace DotaMaster.Data.ResponseModels.ProfileResponses
 
     public class Hero
     {
-        [JsonProperty("name")]
         public required string Name { get; set; }
     }
 }

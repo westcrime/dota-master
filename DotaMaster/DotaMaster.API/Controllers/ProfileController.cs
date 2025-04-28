@@ -1,124 +1,71 @@
-﻿using AutoMapper;
-using DotaMaster.API.DTOs;
+﻿using System.Security.Claims;
+using DotaMaster.Application.Models.Profile;
 using DotaMaster.Application.Services;
+using DotaMaster.Domain.Exceptions;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
 
 namespace DotaMaster.API.Controllers
 {
     [ApiController]
     [Route("profile")]
-    public class ProfileController : ControllerBase
+    public class ProfileController(ProfileService profileService, ILogger<ProfileController> logger) : ControllerBase
     {
-        private readonly ProfileService _profileService;
-        private readonly ILogger<ProfileController> _logger;
-        private readonly IMapper _mapper;
-
-        public ProfileController(ProfileService profileService, ILogger<ProfileController> logger, IMapper mapper)
-        {
-            _mapper = mapper;
-            _profileService = profileService;
-            _logger = logger;
-        }
+        private readonly ProfileService _profileService = profileService;
+        private readonly ILogger<ProfileController> _logger = logger;
 
         [HttpGet]
-        public async Task<IActionResult> GetProfile()
+        public async Task<SteamProfileModel> GetProfile()
+        {
+            _logger.LogInformation("Steam profile requested");
+            string steamId = CheckAuthorization();
+            return await _profileService.GetProfile(steamId);
+        }
+
+        private string CheckAuthorization()
         {
             if (User.Identity == null || !User.Identity.IsAuthenticated)
             {
-                return Unauthorized(new { Message = "User is not authenticated" });
+                throw new BadRequestException("User is not authenticated");
             }
-
-            // Получение Steam ID из утверждений
             var steamId = User.FindFirstValue(ClaimTypes.NameIdentifier).Split('/').Last();
             if (string.IsNullOrEmpty(steamId))
             {
-                return BadRequest(new { Message = "Steam ID not found in claims" });
+                throw new BadRequestException("Steam ID not found in claims");
             }
 
-            var profile = await _profileService.GetProfile(steamId);
-            var profileDto = _mapper.Map<ProfileDto>(profile);
-            return Ok(profileDto);
+            return steamId;
         }
 
         [HttpGet("basic-info")]
-        public async Task<IActionResult> GetBasicInfo()
+        public async Task<BasicInfoModel> GetBasicInfo()
         {
-            if (User.Identity == null || !User.Identity.IsAuthenticated)
-            {
-                return Unauthorized(new { Message = "User is not authenticated" });
-            }
-
-            // Получение Steam ID из утверждений
-            var steamId = User.FindFirstValue(ClaimTypes.NameIdentifier).Split('/').Last();
-            if (string.IsNullOrEmpty(steamId))
-            {
-                return BadRequest(new { Message = "Steam ID not found in claims" });
-            }
-
-            var basicInfoModel = await _profileService.GetBasicInfo(steamId);
-            var basicInfoDto = _mapper.Map<BasicInfoDto>(basicInfoModel);
-            return Ok(basicInfoDto);
+            _logger.LogInformation("Basic Profile Info requested");
+            string steamId = CheckAuthorization();
+            return await _profileService.GetBasicInfo(steamId);
         }
 
         [HttpGet("records")]
-        public async Task<IActionResult> GetRecords()
+        public async Task<RecordsModel> GetRecords()
         {
-            if (User.Identity == null || !User.Identity.IsAuthenticated)
-            {
-                return Unauthorized(new { Message = "User is not authenticated" });
-            }
-
-            // Получение Steam ID из утверждений
-            var steamId = User.FindFirstValue(ClaimTypes.NameIdentifier).Split('/').Last();
-            if (string.IsNullOrEmpty(steamId))
-            {
-                return BadRequest(new { Message = "Steam ID not found in claims" });
-            }
-
-            var recordsModel = await _profileService.GetRecords(steamId);
-            var recordsDto = _mapper.Map<RecordsDto>(recordsModel);
-            return Ok(recordsDto);
+            _logger.LogInformation("Records requested");
+            string steamId = CheckAuthorization();
+            return await _profileService.GetRecords(steamId);
         }
 
         [HttpGet("recent-hero-stats")]
-        public async Task<IActionResult> GetRecentHeroStats()
+        public async Task<IEnumerable<HeroStatModel>> GetRecentHeroStats()
         {
-            if (User.Identity == null || !User.Identity.IsAuthenticated)
-            {
-                return Unauthorized(new { Message = "User is not authenticated" });
-            }
-
-            // Получение Steam ID из утверждений
-            var steamId = User.FindFirstValue(ClaimTypes.NameIdentifier).Split('/').Last();
-            if (string.IsNullOrEmpty(steamId))
-            {
-                return BadRequest(new { Message = "Steam ID not found in claims" });
-            }
-
-            var heroStatModels = await _profileService.GetHeroStats(steamId);
-            var heroStatDtos = _mapper.Map<IEnumerable<HeroStatDto>>(heroStatModels);
-            return Ok(heroStatDtos);
+            _logger.LogInformation("Recent hero stats requested");
+            string steamId = CheckAuthorization();
+            return await _profileService.GetHeroStats(steamId);
         }
 
         [HttpGet("matches-basic-info")]
-        public async Task<IActionResult> GetMatchesBasicInfo()
+        public async Task<IEnumerable<MatchBasicInfoModel>> GetMatchesBasicInfo()
         {
-            if (User.Identity == null || !User.Identity.IsAuthenticated)
-            {
-                return Unauthorized(new { Message = "User is not authenticated" });
-            }
-
-            // Получение Steam ID из утверждений
-            var steamId = User.FindFirstValue(ClaimTypes.NameIdentifier).Split('/').Last();
-            if (string.IsNullOrEmpty(steamId))
-            {
-                return BadRequest(new { Message = "Steam ID not found in claims" });
-            }
-
-            var matchModels = await _profileService.GetRecentMatches(steamId);
-            var matchDtos = _mapper.Map<IEnumerable<MatchBasicInfoDto>>(matchModels);
-            return Ok(matchDtos);
+            _logger.LogInformation("Matches List requested");
+            string steamId = CheckAuthorization();
+            return await _profileService.GetRecentMatches(steamId);
         }
     }
 }

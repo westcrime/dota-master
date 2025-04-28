@@ -10,7 +10,7 @@ namespace DotaMaster.Data.MappingProfiles
     {
         public DataMappingProfile()
         {
-            CreateMap<ResponseModels.Match.MatchInfoResponse.Player, DotaMaster.Data.Entities.Match.PlayerPerfomance>();
+            CreateMap<MatchInfoResponse.Player, PlayerPerfomance>();
             CreateMap<MatchInfoResponse, MatchInfo>();
             CreateMap<UserStatsResponse, UserStats>();
             CreateMap<AvgHeroStatsResponse, AvgHeroStats>();

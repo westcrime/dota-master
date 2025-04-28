@@ -1,5 +1,4 @@
-﻿using AutoMapper;
-using DotaMaster.API.DTOs;
+﻿using DotaMaster.Application.Models;
 using DotaMaster.Application.Services;
 using Microsoft.AspNetCore.Mvc;
 
@@ -7,24 +6,16 @@ namespace DotaMaster.API.Controllers
 {
     [ApiController]
     [Route("heroes")]
-    public class HeroesController : ControllerBase
+    public class HeroesController(HeroService heroService, ILogger<HeroesController> logger) : ControllerBase
     {
-        private readonly HeroService _heroService;
-        private readonly ILogger<HeroesController> _logger;
-        private readonly IMapper _mapper;
-
-        public HeroesController(HeroService heroService, ILogger<HeroesController> logger, IMapper mapper)
-        {
-            _heroService = heroService;
-            _logger = logger;
-            _mapper = mapper;
-        }
+        private readonly HeroService _heroService = heroService;
+        private readonly ILogger<HeroesController> _logger = logger;
 
         [HttpGet]
-        public async Task<ActionResult> GetHeroesInfo()
+        public async Task<IEnumerable<HeroModel>> Get()
         {
-            var heroesModel = await _heroService.GetHeroesInfo();
-            return Ok(_mapper.Map<IEnumerable<HeroDto>>(heroesModel));
+            _logger.LogInformation("Heroes are requested");
+            return await _heroService.Get();
         }
     }
 }

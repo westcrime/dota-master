@@ -1,10 +1,9 @@
 ﻿using Newtonsoft.Json;
 
-namespace DotaMaster.Data.ResponseModels.ProfileResponses
+namespace DotaMaster.Data.ResponseModels.Profile
 {
     public class RecordsResponse
     {
-        [JsonProperty("field")]
         public required string Field { get; set; }
 
         [JsonProperty("n")]

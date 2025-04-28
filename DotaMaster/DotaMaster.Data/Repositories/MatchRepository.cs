@@ -4,7 +4,6 @@ using AutoMapper;
 using DotaMaster.Data.Contexts;
 using DotaMaster.Data.Entities.Match;
 using DotaMaster.Data.ResponseModels.Match;
-using DotaMaster.Data.ResponseModels.MatchResponses;
 using DotaMaster.Domain.Exceptions;
 using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
@@ -78,10 +77,10 @@ namespace DotaMaster.Data.Repositories
                 ?? throw new ArgumentNullException("Can not parse GetAvgHeroStats response");
 
             var avgHeroStatsResponse = (((((JObject)parsed["data"])
-                ["heroStats"] ?? throw new BadRequestException("Invalid input data from user"))
-                ["stats"] ?? throw new BadRequestException("Invalid input data from user"))
-                .First() ?? throw new BadRequestException("Invalid input data from user"))
-                .ToObject<AvgHeroStatsResponse>() ?? throw new ArgumentNullException("Can not parse to AvgHeroStatsResponse");
+                ["heroStats"] ?? throw new BadRequestException("GetAvgHeroStats: Invalid input data from user"))
+                ["stats"] ?? throw new BadRequestException("GetAvgHeroStats: Invalid input data from user"))
+                .First() ?? throw new BadRequestException("GetAvgHeroStats: Invalid input data from user"))
+                .ToObject<AvgHeroStatsResponse>() ?? throw new ArgumentNullException("GetAvgHeroStats: Can not parse to AvgHeroStatsResponse");
 
             return _mapper.Map<AvgHeroStats>(avgHeroStatsResponse);
         }
@@ -127,10 +126,10 @@ namespace DotaMaster.Data.Repositories
                 ?? throw new ArgumentNullException("Can not parse GetBasicInfoAsync response");
 
             var userStatsResponse = (((((JObject)parsed["data"])
-                ["match"] ?? throw new BadRequestException("Invalid match id or dota id"))
-                ["players"] ?? throw new BadRequestException("Invalid match id or dota id"))
-                .First ?? throw new BadRequestException("Invalid match id or dota id"))
-                .ToObject<UserStatsResponse>() ?? throw new ArgumentNullException("Can not parse to UserStatsResponse");
+                ["match"] ?? throw new BadRequestException("GetBasicInfoAsync: Invalid match id or dota id"))
+                ["players"] ?? throw new BadRequestException("GetBasicInfoAsync: Invalid match id or dota id"))
+                .First ?? throw new BadRequestException("GetBasicInfoAsync: Invalid match id or dota id"))
+                .ToObject<UserStatsResponse>() ?? throw new ArgumentNullException("GetBasicInfoAsync: Can not parse to UserStatsResponse");
 
             var userStats = _mapper.Map<UserStats>(userStatsResponse);
             userStats.ImpactPerMinute = userStatsResponse.Stats.ImpPerMinute;
@@ -186,8 +185,8 @@ namespace DotaMaster.Data.Repositories
             var parsed = JsonConvert.DeserializeObject<Dictionary<string, object>>(jsonResponse)
                 ?? throw new ArgumentNullException("Can not parse GetMatchInfo response");
             var matchInfoResponse = (((JObject)parsed["data"])
-                ["match"] ?? throw new BadRequestException("Invalid match id or dota id"))
-                .ToObject<MatchInfoResponse>() ?? throw new ArgumentNullException("Can not parse to MatchInfoResponse");
+                ["match"] ?? throw new BadRequestException("GetMatchInfo: Invalid match id or dota id"))
+                .ToObject<MatchInfoResponse>() ?? throw new ArgumentNullException("GetMatchInfo: Can not parse to MatchInfoResponse");
             return _mapper.Map<MatchInfo>(matchInfoResponse);
         }
 
@@ -237,7 +236,7 @@ namespace DotaMaster.Data.Repositories
             var parsed = JsonConvert.DeserializeObject<Dictionary<string, object>>(jsonResponse)
                 ?? throw new ArgumentNullException("Can not parse GetPickAnalyzeAsync response");
             var winratesResponse = (((JObject)parsed["data"])
-                ["heroStats"] ?? throw new BadRequestException("Invalid parameters"))
+                ["heroStats"] ?? throw new BadRequestException("GetPickAsync: Invalid input"))
                 .ToObject<WinratesResponse>() ?? throw new ArgumentNullException("Can not parse to WinratesResponse");
             ValidateHeroCounts(alliedHeroes, enemyHeroes);
 
@@ -318,17 +317,17 @@ namespace DotaMaster.Data.Repositories
             var parsed = JsonConvert.DeserializeObject<Dictionary<string, object>>(jsonResponse)
                 ?? throw new ArgumentNullException("Can not parse GetLaningAsync response");
             var laningResponse = ((((((JObject)parsed["data"])
-                ["match"] ?? throw new BadRequestException("Invalid input data"))
-                ["players"] ?? throw new BadRequestException("Invalid input data"))
-                .First ?? throw new BadRequestException("Invalid input data"))
-                ["stats"] ?? throw new BadRequestException("Invalid input data"))
-                .ToObject<LaningResponse>() ?? throw new BadRequestException("Can not parse to LaningResponse");
+                ["match"] ?? throw new BadRequestException("GetLaningAsync: Invalid input data"))
+                ["players"] ?? throw new BadRequestException("GetLaningAsync: Invalid input data"))
+                .First ?? throw new BadRequestException("GetLaningAsync: Invalid input data"))
+                ["stats"] ?? throw new BadRequestException("GetLaningAsync: Invalid input data"))
+                .ToObject<LaningResponse>() ?? throw new ArgumentException("GetLaningAsync: Can not parse to LaningResponse");
 
             var avgLaningResponse = (((((JObject)parsed["data"])
-                ["heroStats"] ?? throw new BadRequestException("Invalid input data"))
-                ["stats"] ?? throw new BadRequestException("Invalid input data"))
-                .First ?? throw new BadRequestException("Invalid input data"))
-                .ToObject<AvgLaningStatsResponse>() ?? throw new BadRequestException("Can not parse to AvgLaningStatsResponse");
+                ["heroStats"] ?? throw new BadRequestException("GetLaningAsync: Invalid input data"))
+                ["stats"] ?? throw new BadRequestException("GetLaningAsync: Invalid input data"))
+                .First ?? throw new BadRequestException("GetLaningAsync: Invalid input data"))
+                .ToObject<AvgLaningStatsResponse>() ?? throw new ArgumentException("GetLaningAsync: Can not parse to AvgLaningStatsResponse");
 
             return new Laning
             {
