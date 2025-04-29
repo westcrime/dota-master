@@ -1,6 +1,7 @@
 ﻿using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace DotaMaster.API.Controllers
@@ -18,6 +19,7 @@ namespace DotaMaster.API.Controllers
             return Challenge(new AuthenticationProperties { RedirectUri = "http://localhost:3000/profile" }, "Steam");
         }
 
+        [Authorize]
         [HttpGet("logout")]
         public IActionResult Logout()
         {

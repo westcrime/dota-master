@@ -2,6 +2,7 @@
 using DotaMaster.Application.Models.Profile;
 using DotaMaster.Application.Services;
 using DotaMaster.Domain.Exceptions;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace DotaMaster.API.Controllers
@@ -13,6 +14,7 @@ namespace DotaMaster.API.Controllers
         private readonly ProfileService _profileService = profileService;
         private readonly ILogger<ProfileController> _logger = logger;
 
+        [Authorize]
         [HttpGet]
         public async Task<SteamProfileModel> GetProfile()
         {
@@ -23,10 +25,6 @@ namespace DotaMaster.API.Controllers
 
         private string CheckAuthorization()
         {
-            if (User.Identity == null || !User.Identity.IsAuthenticated)
-            {
-                throw new BadRequestException("User is not authenticated");
-            }
             var steamId = User.FindFirstValue(ClaimTypes.NameIdentifier).Split('/').Last();
             if (string.IsNullOrEmpty(steamId))
             {
@@ -36,6 +34,7 @@ namespace DotaMaster.API.Controllers
             return steamId;
         }
 
+        [Authorize]
         [HttpGet("basic-info")]
         public async Task<BasicInfoModel> GetBasicInfo()
         {
@@ -44,6 +43,7 @@ namespace DotaMaster.API.Controllers
             return await _profileService.GetBasicInfo(steamId);
         }
 
+        [Authorize]
         [HttpGet("records")]
         public async Task<RecordsModel> GetRecords()
         {
@@ -52,6 +52,7 @@ namespace DotaMaster.API.Controllers
             return await _profileService.GetRecords(steamId);
         }
 
+        [Authorize]
         [HttpGet("recent-hero-stats")]
         public async Task<IEnumerable<HeroStatModel>> GetRecentHeroStats()
         {
@@ -60,6 +61,7 @@ namespace DotaMaster.API.Controllers
             return await _profileService.GetHeroStats(steamId);
         }
 
+        [Authorize]
         [HttpGet("matches-basic-info")]
         public async Task<IEnumerable<MatchBasicInfoModel>> GetMatchesBasicInfo()
         {
