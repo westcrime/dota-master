@@ -16,7 +16,7 @@ namespace DotaMaster.API.Controllers
         public IActionResult Login()
         {
             _logger.LogInformation("Login requested");
-            return Challenge(new AuthenticationProperties { RedirectUri = "http://localhost:3000/profile" }, "Steam");
+            return Challenge(new AuthenticationProperties { RedirectUri = "http://localhost:3000" }, "Steam");
         }
 
         [Authorize]

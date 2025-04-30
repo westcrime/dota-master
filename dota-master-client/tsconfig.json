@@ -3,6 +3,7 @@
     "esModuleInterop": true,
     "paths": {
       "@api/*": ["./src/api/*"],
+      "@src/*": ["./src/*"],
       "@components/*": ["./src/components/*"],
       "@shared/*": ["./src/shared/*"],
       "@context/*": ["./src/context/*"],
