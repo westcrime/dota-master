@@ -30,8 +30,8 @@ const Header = () => {
   }
 
   return (
-    <header className="w-full inline-flex py-7 px-3 items-center bg-gray-800 text-white">
-      <Logo />
+    <header className="w-full inline-flex py-1 px-2 items-center bg-gray-800 text-white">
+      <div className="w-[20%] h-full"><Logo /></div>
       <div className="w-[65%] h-full">sa</div>
       <div className="w-[15%] h-full">
         <SteamProfileCard />
