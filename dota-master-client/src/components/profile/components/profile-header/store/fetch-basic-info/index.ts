@@ -8,7 +8,7 @@ import {
   put,
   takeLatest,
 } from "redux-saga/effects";
-import profileApi from "@components/profile-header/api/profile";
+import profileApi from "@src/components/profile/components/profile-header/api/profile";
 import ProfileBasicInfoModel from "../../models/profileBasicInfo";
 
 interface FetchProfileBasicInfoState {
@@ -50,7 +50,8 @@ const fetchProfileBasicInfoSlice = createSlice({
 
 export const { fetchProfileBasicInfoRequest, resetState } =
   fetchProfileBasicInfoSlice.actions;
-export const fetchProfileBasicInfoSliceReducer = fetchProfileBasicInfoSlice.reducer;
+export const fetchProfileBasicInfoSliceReducer =
+  fetchProfileBasicInfoSlice.reducer;
 
 type ApiResponse = AxiosResponse<ProfileBasicInfoModel>;
 

@@ -12,7 +12,12 @@ import { createTheme, ThemeProvider } from "@mui/material";
 const darkTheme = createTheme({
   palette: {
     mode: 'dark',
-  },
+    background: {
+      default: '#000000',
+      paper: 'black',
+    },
+    
+  }
 });
 
 function App() {
