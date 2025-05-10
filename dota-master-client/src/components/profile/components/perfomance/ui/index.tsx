@@ -12,31 +12,35 @@ import {
   ListItemText,
   Skeleton,
 } from "@mui/material";
-import {
-  PieChart,
-  Pie,
-  Cell,
-  ResponsiveContainer,
-  Tooltip,
-} from "recharts";
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
 import { RootState } from "@src/store";
 import { useSelector, useDispatch } from "react-redux";
 import { fetchHeroPerfomanceRequest } from "../store/fetch-perfomance";
 import { HeroTooltip } from "../components/hero-tooltip";
 
-function calculateIconPosition(
-  index: number,
-  total: number,
-  cx: number,
-  cy: number,
-  radius: number
-) {
-  const angle = (index * 360) / total - 90;
-  return {
-    x: cx + radius * Math.cos((angle * Math.PI) / 180) - 12,
-    y: cy + radius * Math.sin((angle * Math.PI) / 180) - 12,
-  };
-} 
+const getImpactColor = (impact: number) => {
+  if (impact >= 8)
+    return { text: "#4caf50", bg: "rgba(76, 175, 80, 0.1)", border: "#4caf50" };
+  if (impact >= 5)
+    return { text: "#ffc107", bg: "rgba(255, 193, 7, 0.1)", border: "#ffc107" };
+  if (impact >= 2)
+    return { text: "#ff9800", bg: "rgba(255, 152, 0, 0.1)", border: "#ff9800" };
+  return { text: "#f44336", bg: "rgba(244, 67, 54, 0.1)", border: "#f44336" };
+};
+
+// function calculateIconPosition(
+//   index: number,
+//   total: number,
+//   cx: number,
+//   cy: number,
+//   radius: number
+// ) {
+//   const angle = (index * 360) / total - 90;
+//   return {
+//     x: cx + radius * Math.cos((angle * Math.PI) / 180) - 12,
+//     y: cy + radius * Math.sin((angle * Math.PI) / 180) - 12,
+//   };
+// }
 
 const Perfomance = () => {
   const { loading, error, data } = useSelector(
@@ -95,7 +99,7 @@ const Perfomance = () => {
       <CardHeader
         title={
           <Typography variant="h5" fontWeight="bold">
-            Недавние Показатели
+            Показатели за 20 матчей
           </Typography>
         }
       />
@@ -112,37 +116,48 @@ const Perfomance = () => {
                   outerRadius={130}
                   paddingAngle={2}
                   cornerRadius={4}
+                  animationBegin={800}
+                  animationDuration={1200}
+                  animationEasing="ease-out"
                   dataKey="value"
-                  label={({ cx, cy, index }) => {
+                  label={({
+                    cx,
+                    cy,
+                    midAngle,
+                    innerRadius,
+                    outerRadius,
+                    index,
+                  }) => {
                     const heroName = pieChartData[index].name.replace(
                       "npc_dota_hero_",
                       ""
                     );
-                    const midRadius = 95;
-                    const iconPosition = calculateIconPosition(
-                      index,
-                      pieChartData.length,
-                      cx,
-                      cy,
-                      midRadius
-                    );
+                    const radius =
+                      innerRadius + (outerRadius - innerRadius) * 0.5;
+                    const x =
+                      cx + radius * Math.cos((-midAngle * Math.PI) / 180);
+                    const y =
+                      cy + radius * Math.sin((-midAngle * Math.PI) / 180);
 
                     return (
                       <image
                         href={`${import.meta.env.VITE_PUBLIC_HERO_ICONS_DOMAIN}/${heroName}_icon.png`}
-                        x={iconPosition.x}
-                        y={iconPosition.y}
+                        x={x - 14}
+                        y={y - 14}
                         width={28}
                         height={28}
+                        clipPath="circle(14px at 14px 14px)"
                       />
                     );
                   }}
                   labelLine={false}
                 >
-                  {pieChartData.map((_, index) => (
+                  {pieChartData.map((entry, index) => (
                     <Cell
                       key={`cell-${index}`}
-                      stroke="#0"
+                      name={entry.name}
+                      fill={`url(#${entry.name.replace("npc_dota_hero_", "")}-gradient)`}
+                      stroke="#1e1e1e"
                       strokeWidth={2}
                     />
                   ))}
@@ -156,6 +171,24 @@ const Perfomance = () => {
                     boxShadow: "0 4px 20px rgba(0,0,0,0.25)",
                   }}
                 />
+                <defs>
+                  {pieChartData.map((entry) => {
+                    const heroName = entry.name.replace("npc_dota_hero_", "");
+                    return (
+                      <linearGradient
+                        key={`gradient-${heroName}`}
+                        id={`${heroName}-gradient`}
+                        x1="0"
+                        y1="0"
+                        x2="1"
+                        y2="1"
+                      >
+                        <stop offset="0%" stopColor="#4a148c" />
+                        <stop offset="100%" stopColor="#7b1fa2" />
+                      </linearGradient>
+                    );
+                  })}
+                </defs>
               </PieChart>
             </ResponsiveContainer>
           </Box>
@@ -165,7 +198,7 @@ const Perfomance = () => {
                 <ListItem
                   key={hero.heroId}
                   sx={{
-                    bgcolor: "grey.900",
+                    bgcolor: "black",
                     borderRadius: 2,
                     p: 2,
                     mb: 0.5,
@@ -173,7 +206,7 @@ const Perfomance = () => {
                     "&:hover": {
                       transform: "translateY(-2px)",
                       boxShadow: 1,
-                      bgcolor: "grey.800",
+                      bgcolor: "grey.900",
                     },
                   }}
                 >
@@ -303,8 +336,92 @@ const Perfomance = () => {
                             </Typography>
                           </Box>
                           <Typography variant="caption" color="text.secondary">
-                            KDA
+                            Средний KDA
                           </Typography>
+                        </Box>
+                        <Box
+                          sx={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "center",
+                            width: "100%",
+                            mt: 1,
+                          }}
+                        >
+                          <Box sx={{ display: "flex", gap: 2 }}>
+                            <Box
+                              sx={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 0.5,
+                              }}
+                            >
+                              <Typography variant="body2" color="yellow">
+                                Средний GPM:
+                              </Typography>
+                              <Typography
+                                variant="body2"
+                                color="yellow"
+                                component="span"
+                              >
+                                {hero.avgGpm}
+                              </Typography>
+                            </Box>
+                            <Box
+                              sx={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 0.5,
+                              }}
+                            >
+                              <Typography
+                                variant="body2"
+                                sx={{ color: "#8a82fa" }}
+                              >
+                                Средний XPM:
+                              </Typography>
+                              <Typography
+                                variant="body2"
+                                sx={{ color: "#8a82fa" }}
+                                component="span"
+                              >
+                                {hero.avgXpm}
+                              </Typography>
+                            </Box>
+                          </Box>
+
+                          <Box
+                            sx={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 1,
+                              ml: 2,
+                              px: 2,
+                              py: 1,
+                              borderRadius: 1,
+                              bgcolor: getImpactColor(hero.impact).bg,
+                              border: `1px solid ${getImpactColor(hero.impact).border}`,
+                            }}
+                          >
+                            <Typography
+                              variant="subtitle2"
+                              sx={{
+                                fontWeight: "bold",
+                                color: getImpactColor(hero.impact).text,
+                              }}
+                            >
+                              Impact:
+                            </Typography>
+                            <Typography
+                              variant="subtitle2"
+                              sx={{
+                                fontWeight: "bold",
+                                color: getImpactColor(hero.impact).text,
+                              }}
+                            >
+                              {hero.impact.toFixed(1)}
+                            </Typography>
+                          </Box>
                         </Box>
                       </Box>
                     }

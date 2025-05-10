@@ -103,7 +103,7 @@ const HeroTooltip: React.FC<HeroTooltipProps> = ({
 
               <Box>
                 <Typography variant="caption" color="text.secondary">
-                  KDA
+                  Средний KDA
                 </Typography>
                 <Typography
                   variant="body1"

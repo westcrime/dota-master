@@ -138,21 +138,21 @@ const Records = () => {
       setElements([
         {
           iconUrl: "killsIcon.png",
-          mainText: `Среднее убийств: ${data.avgKills.toFixed(1)}`,
+          mainText: `Среднее кол-во убийств: ${data.avgKills.toFixed(1)}`,
           secondaryText: `Всего: ${data.kills}`,
           value: data.kills,
           maxValue: maxValues.kills,
         },
         {
           iconUrl: "deathsIcon.png",
-          mainText: `Среднее смертей: ${data.avgDeaths.toFixed(1)}`,
+          mainText: `Среднее кол-во смертей: ${data.avgDeaths.toFixed(1)}`,
           secondaryText: `Всего: ${data.deaths}`,
           value: data.deaths,
           maxValue: maxValues.deaths,
         },
         {
           iconUrl: "assistsIcon.png",
-          mainText: `Среднее ассистов: ${data.avgAssists.toFixed(1)}`,
+          mainText: `Среднее кол-во ассистов: ${data.avgAssists.toFixed(1)}`,
           secondaryText: `Всего: ${data.assists}`,
           value: data.assists,
           maxValue: maxValues.assists,
@@ -173,14 +173,14 @@ const Records = () => {
         },
         {
           iconUrl: "lastHitsIcon.png",
-          mainText: `Среднее добиваний: ${data.avgLastHits.toFixed(1)}`,
+          mainText: `Среднее кол-во добиваний: ${data.avgLastHits.toFixed(1)}`,
           secondaryText: `Всего: ${data.lastHits}`,
           value: data.lastHits,
           maxValue: maxValues.lastHits,
         },
         {
           iconUrl: "deniesIcon.png",
-          mainText: `Среднее денаев: ${data.avgDenies.toFixed(1)}`,
+          mainText: `Среднее кол-во денаев: ${data.avgDenies.toFixed(1)}`,
           secondaryText: `Всего: ${data.denies}`,
           value: data.denies,
           maxValue: maxValues.denies,
