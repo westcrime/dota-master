@@ -15,6 +15,12 @@ namespace DotaMaster.Data.ResponseModels.Profile
 
         [JsonProperty("duration")]
         public int Duration { get; set; }
+        
+        [JsonProperty("start_time")]
+        public int StartTime { get; set; }
+        
+        [JsonProperty("skill")]
+        public int Skill { get; set; }
 
         [JsonProperty("hero_id")]
         public int HeroId { get; set; }

@@ -33,7 +33,7 @@ namespace DotaMaster.Application.Services
             return _mapper.Map<IEnumerable<HeroStatModel>>(heroStats);
         }
 
-        public async Task<IEnumerable<MatchBasicInfoModel>> GetRecentMatches(string steamId, int limit = 15, int offset = 0)
+        public async Task<IEnumerable<MatchBasicInfoModel>> GetRecentMatches(string steamId, int limit, int offset)
         {
             var matchesInfo = await _profileRepository.GetMatchesInfoAsync(steamId, limit, offset);
             return _mapper.Map<IEnumerable<MatchBasicInfoModel>>(matchesInfo);

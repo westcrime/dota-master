@@ -62,12 +62,12 @@ namespace DotaMaster.API.Controllers
         }
 
         [Authorize]
-        [HttpGet("matches-basic-info")]
-        public async Task<IEnumerable<MatchBasicInfoModel>> GetMatchesBasicInfo()
+        [HttpGet("matches")]
+        public async Task<IEnumerable<MatchBasicInfoModel>> GetMatches(int limit = 15, int offset = 0)
         {
             _logger.LogInformation("Matches List requested");
             string steamId = CheckAuthorization();
-            return await _profileService.GetRecentMatches(steamId);
+            return await _profileService.GetRecentMatches(steamId, limit, offset);
         }
     }
 }

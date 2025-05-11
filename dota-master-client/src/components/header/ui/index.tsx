@@ -30,7 +30,7 @@ const Header = () => {
   }
 
   return (
-    <header className="w-full inline-flex py-1 px-2 items-center bg-gray-800 text-white">
+    <header className="w-full inline-flex py-1 px-20 items-center bg-gray-800 text-white">
       <div className="w-[20%] h-full">
         <Logo />
       </div>

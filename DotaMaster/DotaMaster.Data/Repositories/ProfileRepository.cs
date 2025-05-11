@@ -246,6 +246,8 @@ namespace DotaMaster.Data.Repositories
                 IsWin = match.PlayerSlot < 100? match.RadiantWin : !match.RadiantWin,
                 Duration = TimeSpan.FromSeconds(match.Duration),
                 Kills = match.Kills,
+                Skill = match.Skill,
+                StartTime = DateTime.Parse(match.StartTime.ToString()),
                 Deaths = match.Deaths,
                 Assists = match.Assists
             }).ToList();
