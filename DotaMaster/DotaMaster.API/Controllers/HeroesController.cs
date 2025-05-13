@@ -17,5 +17,12 @@ namespace DotaMaster.API.Controllers
             _logger.LogInformation("Heroes are requested");
             return await _heroService.Get();
         }
+
+        [HttpGet("opendota")]
+        public async Task<IEnumerable<HeroModel>> GetOpendota()
+        {
+            _logger.LogInformation("Heroes (Opendota) are requested");
+            return await _heroService.GetOpendota();
+        }
     }
 }

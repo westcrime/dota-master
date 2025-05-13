@@ -1,6 +1,8 @@
-﻿using System.Net.Http.Headers;
+﻿using System.Collections.Generic;
+using System.Net.Http.Headers;
 using System.Text;
 using AutoMapper;
+using DotaMaster.Data.DI;
 using DotaMaster.Data.Entities;
 using DotaMaster.Data.ResponseModels.Hero;
 using Microsoft.Extensions.Configuration;
@@ -14,6 +16,7 @@ namespace DotaMaster.Data.Repositories
         private readonly string _stratzApiKey;
         private readonly IConfiguration _configuration;
         private readonly HttpClient _httpClient;
+        private const string _openDotaUrl = "https://api.opendota.com/api";
         private const string _stratzGraphqlUrl = "https://api.stratz.com/graphql";
         private readonly IMapper _mapper;
 
@@ -53,6 +56,19 @@ namespace DotaMaster.Data.Repositories
                 ["heroes"] ?? throw new ArgumentNullException("Can not parse GetHeroes response"))
                 .ToObject<List<HeroResponse>>() ?? throw new ArgumentNullException("Can not parse to HeroResponse");
             return _mapper.Map<List<Hero>>(heroResponse);
+        }
+
+        public async Task<IEnumerable<Hero>> GetHeroesOpendota()
+        {
+            string url = $"{_openDotaUrl}/heroes";
+
+            var response = await _httpClient.GetAsync(url);
+            response.EnsureSuccessStatusCode();
+
+            var heroesJson = await response.Content.ReadAsStringAsync();
+            var heroes = JsonConvert.DeserializeObject<HeroOpendotaResponse[]>(heroesJson)
+                ?? throw new ArgumentNullException("Can not parse GetHeroesOpendota response: response is null");
+            return _mapper.Map<List<Hero>>(heroes);
         }
 
         private async Task<HttpResponseMessage> SendGraphqlRequest(object requestBody)

@@ -31,6 +31,9 @@ namespace DotaMaster.Data.ResponseModels.Profile
         [JsonProperty("deaths")]
         public int Deaths { get; set; }
 
+        [JsonProperty("average_rank")]
+        public int AverageRank { get; set; }
+
         [JsonProperty("assists")]
         public int Assists { get; set; }
     }

@@ -1,7 +1,8 @@
 import { createBrowserRouter } from "react-router-dom";
-import { Welcome } from "../components/welcome";
-import { Layout } from "@src/components/layout";
-import { Profile } from "@src/components/profile";
+import { Welcome } from "../pages/welcome";
+import { MatchHistoryCard } from "@pages/matches";
+import { Layout } from "@src/shared/ui/layout";
+import { Profile } from "@src/pages/profile";
 
 const router = createBrowserRouter([
   {
@@ -17,12 +18,12 @@ const router = createBrowserRouter([
         element: <Profile />,
       },
       {
-        path: 'profile',
+        path: "profile",
         element: <Profile />,
       },
       {
         path: "matches",
-        element: <Profile />,
+        element: <MatchHistoryCard />,
       },
     ],
   },

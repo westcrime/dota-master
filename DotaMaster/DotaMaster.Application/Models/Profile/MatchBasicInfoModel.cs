@@ -5,9 +5,9 @@
         bool IsWin,
         TimeSpan Duration,
         DateTime StartTime,
-        int Skill,
-        int HeroId,
+        HeroModel Hero,
         int Kills,
         int Deaths,
+        int AverageRank,
         int Assists);
 }

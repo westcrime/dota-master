@@ -4,7 +4,8 @@
     "paths": {
       "@api/*": ["./src/api/*"],
       "@src/*": ["./src/*"],
-      "@components/*": ["./src/components/*"],
+      "@pages/*": ["./src/pages/*"],
+      "@widgets/*": ["./src/widgets/*"],
       "@shared/*": ["./src/shared/*"],
       "@context/*": ["./src/context/*"],
       "@models/*": ["./src/shared/models/*"],
