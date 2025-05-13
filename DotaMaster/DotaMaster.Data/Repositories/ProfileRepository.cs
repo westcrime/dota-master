@@ -259,7 +259,7 @@ namespace DotaMaster.Data.Repositories
                 StartTime = DateTimeOffset.FromUnixTimeSeconds(match.StartTime).UtcDateTime,
                 Deaths = match.Deaths,
                 Assists = match.Assists,
-                AverageRank = match.AverageRank
+                AverageRank = match.AverageRank ?? 0
             }).ToList();
         }
 

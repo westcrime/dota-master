@@ -32,7 +32,7 @@ namespace DotaMaster.Data.ResponseModels.Profile
         public int Deaths { get; set; }
 
         [JsonProperty("average_rank")]
-        public int AverageRank { get; set; }
+        public int? AverageRank { get; set; }
 
         [JsonProperty("assists")]
         public int Assists { get; set; }
