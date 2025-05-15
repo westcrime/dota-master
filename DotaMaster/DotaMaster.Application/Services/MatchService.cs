@@ -51,7 +51,7 @@ namespace DotaMaster.Application.Services
             aiRequest.Append(template);
 
             StringBuilder aiPickRequest = new StringBuilder(aiRequest.ToString());
-            aiPickRequest.Append("Дай анализ пика героя для игрока, исходя из информации объектов. Не затрагивай другие аспекты, только Пики");
+            aiPickRequest.Append("Дай анализ пика героя для игрока, исходя из информации объектов. Не затрагивай другие аспекты, только Пики. Используй английский для названия героев, не переводи их на русский. Постарайся кратко объяснить причину либо очень низкого или высокого винрейта против/за некоторых героев.");
             var pickAdvice = await _aiRepository.AskAi(aiPickRequest.ToString());
 
             StringBuilder aiLaningRequest = new StringBuilder(aiRequest.ToString());

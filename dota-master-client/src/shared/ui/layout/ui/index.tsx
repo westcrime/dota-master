@@ -7,7 +7,7 @@ const Layout = () => {
     <div className="bg-black">
       <Header />
       <main>
-        <div className="px-18">
+        <div className="px-18 py-6">
           <Outlet />
         </div>
       </main>

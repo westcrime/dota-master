@@ -1,6 +1,6 @@
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "@src/store";
-import { fetchSteamProfileRequest } from "../store/fetch-steam-profile";
+import { fetchSteamProfileRequest } from "@shared/store/fetch-steam-profile";
 import { useEffect, useState } from "react";
 import {
   Alert,

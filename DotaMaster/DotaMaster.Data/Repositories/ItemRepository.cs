@@ -32,7 +32,7 @@ namespace DotaMaster.Data.Repositories
                     Lore = itemResponse.Lore ?? "No Lore Available",
                     Cost = itemResponse.Cost,
                     Description = itemResponse.Abilities?.FirstOrDefault()?.Description ?? "No Description Available",
-                    IconUrl = !string.IsNullOrEmpty(itemResponse.Img)
+                    IconUrl = string.IsNullOrEmpty(itemResponse.Img)
                            ? _dotaIconsUrl + itemResponse.Img
                            : $"{_dotaIconsUrl}/default-image.png"
                 });

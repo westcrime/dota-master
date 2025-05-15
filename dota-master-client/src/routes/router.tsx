@@ -1,8 +1,9 @@
 import { createBrowserRouter } from "react-router-dom";
 import { Welcome } from "../pages/welcome";
-import { MatchHistoryCard } from "@pages/matches";
 import { Layout } from "@src/shared/ui/layout";
 import { Profile } from "@src/pages/profile";
+import { Matches } from "@src/pages/matches";
+import { MatchAnalysisPage } from "@src/pages/match-analysis";
 
 const router = createBrowserRouter([
   {
@@ -23,7 +24,11 @@ const router = createBrowserRouter([
       },
       {
         path: "matches",
-        element: <MatchHistoryCard />,
+        element: <Matches />,
+      },
+      {
+        path: "match-analysis/:id",
+        element: <MatchAnalysisPage />,
       },
     ],
   },

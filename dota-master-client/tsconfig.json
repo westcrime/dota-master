@@ -9,6 +9,7 @@
       "@shared/*": ["./src/shared/*"],
       "@context/*": ["./src/context/*"],
       "@models/*": ["./src/shared/models/*"],
+      "@features/*": ["./src/features/*"],
       "@store/*": ["./src/store/*"]
     }
   },

@@ -4,27 +4,35 @@ import { configureStore } from "@reduxjs/toolkit";
 import {
   fetchSteamProfileSliceReducer,
   watchFetchSteamProfile,
-} from "@src/widgets/steam-profile-card/store/fetch-steam-profile";
+} from "@src/shared/store/fetch-steam-profile";
 import {
   fetchProfileBasicInfoSliceReducer,
   watchFetchProfileBasicInfo,
-} from "./pages/profile/components/profile-header/store/fetch-basic-info";
+} from "@features/rank-card/store/fetch-basic-info";
 import {
   fetchRecordsSliceReducer,
   watchFetchRecords,
-} from "./pages/profile/components/records/store/fetch-records";
+} from "@features/records/store/fetch-records";
 import {
   fetchHeroPerfomanceSliceReducer,
   watchFetchHeroPerfomance,
-} from "./pages/profile/components/perfomance/store/fetch-perfomance";
+} from "@features/perfomance/store/fetch-perfomance";
 import {
   fetchMatchBasicInfoSliceReducer,
   watchFetchMatchBasicInfo,
-} from "./pages/matches/store/fetch-matches";
+} from "@features/matches/store/fetch-matches";
 import {
   fetchHeroesOpendotaSliceReducer,
   watchFetchHeroesOpendota,
-} from "./shared/ui/heroes-opendota-select/store/fetch-heroes-opendota";
+} from "./features/heroes-opendota-select/store/fetch-heroes-opendota";
+import {
+  fetchMatchSliceReducer,
+  watchFetchMatch,
+} from "./features/match-analysis/store/fetch-match";
+import {
+  fetchHeroesSliceReducer,
+  watchFetchHeroes,
+} from "./shared/store/fetch-heroes";
 
 const rootReducer = combineReducers({
   fetchSteamProfile: fetchSteamProfileSliceReducer,
@@ -33,6 +41,8 @@ const rootReducer = combineReducers({
   fetchPerfomance: fetchHeroPerfomanceSliceReducer,
   fetchMatches: fetchMatchBasicInfoSliceReducer,
   fetchHeroesOpendota: fetchHeroesOpendotaSliceReducer,
+  fetchMatch: fetchMatchSliceReducer,
+  fetchHeroes: fetchHeroesSliceReducer,
 });
 
 const sagaMiddleware = createSagaMiddleware();
@@ -48,6 +58,8 @@ sagaMiddleware.run(watchFetchRecords);
 sagaMiddleware.run(watchFetchHeroPerfomance);
 sagaMiddleware.run(watchFetchMatchBasicInfo);
 sagaMiddleware.run(watchFetchHeroesOpendota);
+sagaMiddleware.run(watchFetchMatch);
+sagaMiddleware.run(watchFetchHeroes);
 
 export default store;
 export type RootState = ReturnType<typeof store.getState>;
