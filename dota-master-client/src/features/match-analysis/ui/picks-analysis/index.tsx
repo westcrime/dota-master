@@ -112,11 +112,10 @@ export const PickAnalysis = ({
         display: "flex",
         flexDirection: "row",
         width: "100%",
-        alignItems: "flex-end", // выравнивание по низу
+        alignItems: "flex-end",
         gap: 3,
       }}
     >
-      {/* Левый блок с анализом героя */}
       <Box sx={{ flex: 1 }}>
         <Box display="flex" flexDirection="column" gap={2}>
           <Typography variant="h6" fontWeight="bold">
@@ -174,9 +173,8 @@ export const PickAnalysis = ({
         </Box>
       </Box>
 
-      {/* Диалог внизу справа, но визуально ниже левого блока */}
       <Box sx={{ alignSelf: "flex-end" }}>
-        <AghanimDialog text={winratesAnalysis} />
+        <AghanimDialog text={winratesAnalysis} right={true} />
       </Box>
     </Box>
   );

@@ -1,14 +1,10 @@
 import { CustomCard } from "@src/shared/ui/custom-card";
-import {
-  CardContent,
-  Typography,
-  CardHeader,
-  Divider,
-} from "@mui/material";
+import { CardContent, Typography, CardHeader, Divider } from "@mui/material";
 import DotaLoader from "@src/widgets/loader";
 import { Match } from "../../models/match";
 import HeroModel from "@src/shared/models/hero";
 import { PickAnalysis } from "../picks-analysis";
+import { LaningAnalysis } from "../lane-analysis";
 
 interface MatchViewProps {
   data: Match | undefined;
@@ -58,6 +54,12 @@ export const MatchView = ({
         <PickAnalysis
           picks={data.picks}
           winratesAnalysis={data.winratesAnalysis}
+          heroes={heroesData}
+        />
+        <LaningAnalysis
+          rank={data.generalInfo.rank}
+          laning={data.laning}
+          laningAnalysis={data.laningAnalysis}
           heroes={heroesData}
         />
       </CardContent>

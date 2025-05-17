@@ -87,6 +87,8 @@ export interface Laning {
   rank: string;
   heroId: number;
   dotaId: number;
+  laneAlliesHeroIds: number[];
+  laneEnemiesHeroIds: number[];
   laningCs: number;
   avgLaningCs: number;
   laningKills: number;
