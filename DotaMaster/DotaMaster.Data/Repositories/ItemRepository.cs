@@ -28,28 +28,27 @@ namespace DotaMaster.Data.Repositories
         }
         public async Task<IEnumerable<Item>> GetAllItemsAsync()
         {
-            string graphqlQuery = @"
-                query GetItems {
-                  constants {
-                    items {
-                      id
-                      name
-                      displayName
-                      stat {
-                        cost
-                      }
-                      attributes {
-                        name
-                        value
-                      }
-                      language {
-                        description
-                        lore
-                      }
-                      image
-                    }
+            string graphqlQuery = @"query GetItems {
+              constants {
+                items(language: RUSSIAN) {
+                  id
+                  name
+                  displayName
+                  stat {
+                    cost
                   }
-                }";
+                  attributes {
+                    name
+                    value
+                  }
+                  language {
+                    description
+                    lore
+                  }
+                  image
+                }
+              }
+            }";
 
             var requestBody = new
             {
@@ -71,12 +70,12 @@ namespace DotaMaster.Data.Repositories
                 items.Add(new Item
                 {
                     Id = entry.Id,
-                    DisplayName = entry.DisplayName ?? "No Title Available",
+                    DisplayName = entry.DisplayName ?? "Нету имени",
                     Lore = string.Join(' ', entry.Language.Lore),
                     Name = entry.Name,
                     Attributes = _mapper.Map<List<Entities.Attribute>>(entry.Attributes),
                     Cost = entry.Stat?.Cost,
-                    Description = entry.Language.Description ?? "No Description Available",
+                    Description = entry.Language.Description ?? "Нету описания",
                     IconUrl = string.IsNullOrEmpty(entry.Image)
                            ? $"{_dotaIconsUrl}default-image.png"
                            : _dotaIconsUrl + entry.Image

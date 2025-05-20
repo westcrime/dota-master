@@ -84,6 +84,7 @@ export const MatchView = ({
           items={itemsData}
           itemsAnalysis={data.itemsAnalysis}
           heroes={heroesData}
+          matchDuration={data.generalInfo.durationSeconds}
         />
       </CardContent>
     </CustomCard>
