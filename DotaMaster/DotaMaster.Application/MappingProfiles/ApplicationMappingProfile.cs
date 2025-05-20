@@ -43,6 +43,7 @@ namespace DotaMaster.Application.MappingProfiles
 
             // Item mapping
             CreateMap<Item, ItemModel>();
+            CreateMap<Data.Entities.Attribute, Models.Attribute>();
         }
     }
 }

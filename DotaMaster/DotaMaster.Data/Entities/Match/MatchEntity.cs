@@ -97,6 +97,8 @@ namespace DotaMaster.Data.Entities.Match
 
     public class LaningEntity
     {
+        public required List<int> LaneAlliesHeroIds { get; set; }
+        public required List<int> LaneEnemiesHeroIds { get; set; }
         public required string Position { get; set; }
         public required string Rank { get; set; }
         public int HeroId { get; set; }

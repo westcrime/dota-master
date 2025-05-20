@@ -33,6 +33,7 @@ import {
   fetchHeroesSliceReducer,
   watchFetchHeroes,
 } from "./shared/store/fetch-heroes";
+import { fetchItemsSliceReducer, watchFetchItems } from "./shared/store/fetch-items";
 
 const rootReducer = combineReducers({
   fetchSteamProfile: fetchSteamProfileSliceReducer,
@@ -43,6 +44,7 @@ const rootReducer = combineReducers({
   fetchHeroesOpendota: fetchHeroesOpendotaSliceReducer,
   fetchMatch: fetchMatchSliceReducer,
   fetchHeroes: fetchHeroesSliceReducer,
+  fetchItems: fetchItemsSliceReducer,
 });
 
 const sagaMiddleware = createSagaMiddleware();
@@ -60,6 +62,7 @@ sagaMiddleware.run(watchFetchMatchBasicInfo);
 sagaMiddleware.run(watchFetchHeroesOpendota);
 sagaMiddleware.run(watchFetchMatch);
 sagaMiddleware.run(watchFetchHeroes);
+sagaMiddleware.run(watchFetchItems);
 
 export default store;
 export type RootState = ReturnType<typeof store.getState>;

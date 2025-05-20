@@ -1,8 +1,6 @@
-﻿using System.Collections.Generic;
-using System.Net.Http.Headers;
+﻿using System.Net.Http.Headers;
 using System.Text;
 using AutoMapper;
-using DotaMaster.Data.DI;
 using DotaMaster.Data.Entities;
 using DotaMaster.Data.ResponseModels.Hero;
 using Microsoft.Extensions.Configuration;

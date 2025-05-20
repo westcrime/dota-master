@@ -1,44 +1,100 @@
-﻿using System.Text.Json;
+﻿using System.Net.Http.Headers;
+using System.Text;
+using AutoMapper;
 using DotaMaster.Data.Entities;
 using DotaMaster.Data.ResponseModels.Items;
+using Microsoft.Extensions.Configuration;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace DotaMaster.Data.Repositories
 {
-    public class ItemRepository(HttpClient httpClient)
+    public class ItemRepository
     {
-        private readonly HttpClient _httpClient = httpClient;
-        private const string _openDotaUrl = "https://api.opendota.com/api";
-        private const string _dotaIconsUrl = "https://cdn.dota2.com";
+        private readonly string _stratzApiKey;
+        private readonly IConfiguration _configuration;
+        private readonly HttpClient _httpClient;
+        private const string _stratzGraphqlUrl = "https://api.stratz.com/graphql";
+        private const string _dotaIconsUrl = "https://cdn.dota2.com/apps/dota2/images/items/";
+        private readonly IMapper _mapper;
 
+        public ItemRepository(IConfiguration configuration, HttpClient httpClient, IMapper mapper)
+        {
+            _mapper = mapper;
+            _httpClient = httpClient;
+            _configuration = configuration;
+            _stratzApiKey = _configuration["StratzApiKey"]
+                ?? throw new ArgumentNullException("Stratz api key is null!");
+        }
         public async Task<IEnumerable<Item>> GetAllItemsAsync()
         {
-            const string url = $"{_openDotaUrl}/constants/items";
-            var response = await _httpClient.GetAsync(url);
-            response.EnsureSuccessStatusCode();
+            string graphqlQuery = @"
+                query GetItems {
+                  constants {
+                    items {
+                      id
+                      name
+                      displayName
+                      stat {
+                        cost
+                      }
+                      attributes {
+                        name
+                        value
+                      }
+                      language {
+                        description
+                        lore
+                      }
+                      image
+                    }
+                  }
+                }";
 
+            var requestBody = new
+            {
+                query = graphqlQuery
+            };
+            var response = await SendGraphqlRequest(requestBody);
+            response.EnsureSuccessStatusCode();
             var jsonResponse = await response.Content.ReadAsStringAsync();
-            var itemsDict = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(jsonResponse)
-                ?? throw new ArgumentNullException("GetAllItemsAsync response is null");
+            var parsed = JsonConvert.DeserializeObject<Dictionary<string, object>>(jsonResponse)
+                ?? throw new ArgumentNullException("Can not parse GetItems response");
+            var itemResponse = ((((JObject)parsed["data"])
+                ["constants"] ?? throw new ArgumentNullException("Can not parse GetItems response"))
+                ["items"] ?? throw new ArgumentNullException("Can not parse GetItems response"))
+                .ToObject<List<ItemResponse>>() ?? throw new ArgumentNullException("Can not parse to ItemResponse");
 
             var items = new List<Item>();
-            foreach (var entry in itemsDict)
+            foreach (var entry in itemResponse)
             {
-                var itemResponse = entry.Value.Deserialize<ItemResponse>()
-                    ?? throw new ArgumentNullException("GetAllItemsAsync: Can't deserialize");
                 items.Add(new Item
                 {
-                    Id = itemResponse.Id,
-                    Title = itemResponse.Dname ?? "No Title Available",
-                    Lore = itemResponse.Lore ?? "No Lore Available",
-                    Cost = itemResponse.Cost,
-                    Description = itemResponse.Abilities?.FirstOrDefault()?.Description ?? "No Description Available",
-                    IconUrl = string.IsNullOrEmpty(itemResponse.Img)
-                           ? _dotaIconsUrl + itemResponse.Img
-                           : $"{_dotaIconsUrl}/default-image.png"
+                    Id = entry.Id,
+                    DisplayName = entry.DisplayName ?? "No Title Available",
+                    Lore = string.Join(' ', entry.Language.Lore),
+                    Name = entry.Name,
+                    Attributes = _mapper.Map<List<Entities.Attribute>>(entry.Attributes),
+                    Cost = entry.Stat?.Cost,
+                    Description = entry.Language.Description ?? "No Description Available",
+                    IconUrl = string.IsNullOrEmpty(entry.Image)
+                           ? $"{_dotaIconsUrl}default-image.png"
+                           : _dotaIconsUrl + entry.Image
                 });
             }
             return items;
         }
 
+        private async Task<HttpResponseMessage> SendGraphqlRequest(object requestBody)
+        {
+            string jsonRequestBody = JsonConvert.SerializeObject(requestBody);
+            var httpRequest = new HttpRequestMessage(HttpMethod.Post, _stratzGraphqlUrl)
+            {
+                Content = new StringContent(jsonRequestBody, Encoding.UTF8, "application/json")
+            };
+            httpRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _stratzApiKey);
+            httpRequest.Headers.UserAgent.ParseAdd("STRATZ_API");
+            return await _httpClient.SendAsync(httpRequest);
+        }
     }
 }

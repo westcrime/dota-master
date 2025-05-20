@@ -2,9 +2,13 @@
 {
     public record ItemModel(
         int Id,
-        string Title,
+        string Name,
+        string DisplayName,
         string Lore,
-        int Cost,
+        int? Cost,
         string IconUrl,
-        string Description);
+        string Description,
+        List<Attribute>? Attributes);
+
+    public record Attribute(string Name, string Value);
 }

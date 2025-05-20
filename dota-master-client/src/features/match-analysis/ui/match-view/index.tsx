@@ -5,6 +5,8 @@ import { Match } from "../../models/match";
 import HeroModel from "@src/shared/models/hero";
 import { PickAnalysis } from "../picks-analysis";
 import { LaningAnalysis } from "../lane-analysis";
+import { ItemsAnalysis } from "../items-analysis";
+import Item from "@src/shared/models/item";
 
 interface MatchViewProps {
   data: Match | undefined;
@@ -14,6 +16,10 @@ interface MatchViewProps {
   heroesData: HeroModel[] | undefined;
   heroesLoading: boolean;
   heroesError: string | undefined;
+
+  itemsData: Item[] | undefined;
+  itemsLoading: boolean;
+  itemsError: string | undefined;
 }
 
 export const MatchView = ({
@@ -23,14 +29,24 @@ export const MatchView = ({
   heroesData,
   heroesError,
   heroesLoading,
+  itemsData,
+  itemsError,
+  itemsLoading,
 }: MatchViewProps) => {
-  if (loading || !data || heroesLoading || !heroesData) {
+  if (
+    loading ||
+    !data ||
+    heroesLoading ||
+    !heroesData ||
+    itemsLoading ||
+    !itemsData
+  ) {
     return (
       <DotaLoader label="Анализ матча. Это может занять некоторое время" />
     );
   }
 
-  if (error || heroesError) {
+  if (error || heroesError || itemsError) {
     return (
       <CustomCard>
         <CardContent>
@@ -60,6 +76,13 @@ export const MatchView = ({
           rank={data.generalInfo.rank}
           laning={data.laning}
           laningAnalysis={data.laningAnalysis}
+          heroes={heroesData}
+        />
+        <ItemsAnalysis
+          rank={data.generalInfo.rank}
+          itemPurchases={data.userStats.itemPurchases}
+          items={itemsData}
+          itemsAnalysis={data.itemsAnalysis}
           heroes={heroesData}
         />
       </CardContent>

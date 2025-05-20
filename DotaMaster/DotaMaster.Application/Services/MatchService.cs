@@ -41,7 +41,7 @@ namespace DotaMaster.Application.Services
             var picks = await _matchRepository.GetPickAsync(rank, rankBracket, dotaId, userStats.HeroId, userStats.Position, alliedHeroIds!, enemyHeroIds!);
 
             StringBuilder aiRequest = new StringBuilder();
-            aiRequest.Append(JsonConvert.SerializeObject((await _itemRepository.GetAllItemsAsync()).Select(i => $"{i.Id} {i.Title}"), Formatting.Indented));
+            aiRequest.Append(JsonConvert.SerializeObject((await _itemRepository.GetAllItemsAsync()).Select(i => $"{i.Id} {i.Name} Attribute: {JsonConvert.SerializeObject(i.Attributes)}"), Formatting.Indented));
             aiRequest.Append(JsonConvert.SerializeObject((await _heroRepository.GetHeroes()).Select(h => $"{h.Id} {h.DisplayName}"), Formatting.Indented));
             aiRequest.Append(JsonConvert.SerializeObject(generalInfo, Formatting.Indented));
             aiRequest.Append(JsonConvert.SerializeObject(userStats, Formatting.Indented));
@@ -51,11 +51,11 @@ namespace DotaMaster.Application.Services
             aiRequest.Append(template);
 
             StringBuilder aiPickRequest = new StringBuilder(aiRequest.ToString());
-            aiPickRequest.Append("Дай анализ пика героя для игрока, исходя из информации объектов. Не затрагивай другие аспекты, только Пики. Постарайся кратко объяснить причину либо очень низкого или высокого винрейта против/за некоторых героев.");
+            aiPickRequest.Append("Дай анализ пика героя для игрока, исходя из информации объектов (Винрейт указан как винрейт героя игрока против или за героев). Не затрагивай другие аспекты, только Пики. Проанализируй каждый матчап. Постарайся кратко объяснить причину либо очень низкого или высокого винрейта против/за некоторых героев.");
             var pickAdvice = await _aiRepository.AskAi(aiPickRequest.ToString());
 
             StringBuilder aiLaningRequest = new StringBuilder(aiRequest.ToString());
-            aiLaningRequest.Append("Дай анализ лайнинга игрока, исходя из информации объектов. Не затрагивай другие аспекты, только Лайнинг. При генерации совета, обрати внимания на героев с которыми на лайне стоял игрок и героев против которых он стоял. Исходя из этой информации дай совет как улучшить лайнинг игрока, если в нем есть проблемы.");
+            aiLaningRequest.Append("Дай анализ лайнинга игрока, исходя из информации объектов. Не затрагивай другие аспекты, только Лайнинг. Исходя из этой информации дай совет как улучшить лайнинг игрока, если в нем есть проблемы.");
             var laningAdvice = await _aiRepository.AskAi(aiLaningRequest.ToString());
 
             StringBuilder aiItemsRequest = new StringBuilder(aiRequest.ToString());
