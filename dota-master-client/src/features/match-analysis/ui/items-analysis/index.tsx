@@ -33,7 +33,7 @@ export const ItemsAnalysis = ({
       <Typography variant="h4" fontWeight="bold">
         Анализ сборки предметов
       </Typography>
-      <Divider sx={{ mb: 2 }} />
+      <Divider sx={{ mb: 8 }} />
 
       <Box
         sx={{
@@ -44,14 +44,14 @@ export const ItemsAnalysis = ({
           gap: 3,
         }}
       >
-        <Box sx={{ width: "60%", height: "1300px" }}>
+        <Box sx={{ width: "50%", height: "1300px" }}>
           <ChronologyLine
             itemPurchases={itemPurchases}
             items={items}
             gameDuration={matchDuration}
           />
         </Box>
-        <Box sx={{ width: "40%", alignSelf: "flex-end" }}>
+        <Box sx={{ width: "50%", alignSelf: "flex-end", transform: "translateY(-50%)" }}>
           <AghanimDialog text={itemsAnalysis} right={true} />
         </Box>
       </Box>

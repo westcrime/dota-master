@@ -74,7 +74,7 @@ export const ChronologyLine = ({
       <Box
         sx={{
           position: "absolute",
-          left: 128,
+          left: 200,
           top: 0,
           bottom: 0,
           width: "4px",
@@ -91,7 +91,7 @@ export const ChronologyLine = ({
             key={`marker-${marker.time}`}
             sx={{
               position: "absolute",
-              left: 0,
+              left: 72,
               top: `${positionPercentage}%`,
               transform: "translateY(-50%)",
               display: "flex",
@@ -130,7 +130,7 @@ export const ChronologyLine = ({
             key={`group-${groupIndex}`}
             sx={{
               position: "absolute",
-              left: 128,
+              left: 200,
               top: `${positionPercentage}%`,
               transform:
                 group.length > 1 ? "translateY(-50%)" : "translate(-50%, -50%)",
@@ -148,7 +148,7 @@ export const ChronologyLine = ({
                 <Box
                   key={`${ip.itemId}-${ip.time}`}
                   sx={{
-                    m: 1.5,
+                    m: 2,
                     position: "relative",
                   }}
                 >
@@ -166,10 +166,10 @@ export const ChronologyLine = ({
                       sx={{
                         position: "absolute",
                         top: "50%",
-                        left: "200%",
+                        left: "75px",
                         transform: "translateX(-50%)",
                         whiteSpace: "nowrap",
-                        mt: 0.5,
+                        mt: 0,
                         fontSize: "0.75rem",
                         color: "text.secondary",
                       }}
@@ -187,10 +187,9 @@ export const ChronologyLine = ({
                 sx={{
                   position: "absolute",
                   top: "50%",
-                  left: "200%",
+                  left: "175%",
                   transform: "translateX(-50%)",
                   whiteSpace: "nowrap",
-                  mt: 0.5,
                   fontSize: "0.75rem",
                   color: "text.secondary",
                 }}

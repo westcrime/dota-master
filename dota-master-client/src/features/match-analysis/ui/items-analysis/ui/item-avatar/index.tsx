@@ -32,7 +32,6 @@ export const ItemAvatar: React.FC<ItemAvatarProps> = ({
   time,
 }) => {
   if (!item) return null;
-  console.log(item.name.includes('recipe') && item.iconUrl === 'https://cdn.dota2.com/apps/dota2/images/items/default-image.png' ? '/recipe_icon.webp' : item.iconUrl)
   return (
     <Box
       sx={{
@@ -53,9 +52,35 @@ export const ItemAvatar: React.FC<ItemAvatarProps> = ({
             </Typography>
 
             <Divider sx={{ my: 1 }} />
-            <Typography variant="h6" fontWeight="bold">
-              {item.displayName}
-            </Typography>
+            <Box
+              sx={{
+                display: "flex",
+                flexDirection: "row",
+                gap: 2,
+                alignItems: "center",
+              }}
+            >
+              <Typography variant="h6" fontWeight="bold">
+                {item.displayName}
+              </Typography>
+              <Avatar
+                src={
+                  item.name.includes("recipe") &&
+                  item.iconUrl ===
+                    "https://cdn.dota2.com/apps/dota2/images/items/default-image.png"
+                    ? "/recipe_icon.webp"
+                    : item.iconUrl
+                }
+                alt={item.displayName}
+                sx={{
+                  width: "48px",
+                  height: "48px",
+                  cursor: "pointer",
+                  border: "2px solid",
+                  transition: "transform 0.2s, box-shadow 0.2s",
+                }}
+              />
+            </Box>
 
             {item.cost && (
               <Typography variant="body2" color="text.secondary">
@@ -102,7 +127,13 @@ export const ItemAvatar: React.FC<ItemAvatarProps> = ({
         placement="right"
       >
         <Avatar
-          src={item.name.includes('recipe') && item.iconUrl === 'https://cdn.dota2.com/apps/dota2/images/items/default-image.png' ? 'recipe_icon.webp' : item.iconUrl}
+          src={
+            item.name.includes("recipe") &&
+            item.iconUrl ===
+              "https://cdn.dota2.com/apps/dota2/images/items/default-image.png"
+              ? "/recipe_icon.webp"
+              : item.iconUrl
+          }
           alt={item.displayName}
           sx={{
             width: "100%",
