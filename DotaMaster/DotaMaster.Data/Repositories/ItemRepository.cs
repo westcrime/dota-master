@@ -15,7 +15,7 @@ namespace DotaMaster.Data.Repositories
         private readonly IConfiguration _configuration;
         private readonly HttpClient _httpClient;
         private const string _stratzGraphqlUrl = "https://api.stratz.com/graphql";
-        private const string _dotaIconsUrl = "https://cdn.dota2.com/apps/dota2/images/items/";
+        private const string _dotaIconsUrl = "https://cdn.stratz.com/images/dota2/items/";
         private readonly IMapper _mapper;
 
         public ItemRepository(IConfiguration configuration, HttpClient httpClient, IMapper mapper)
@@ -77,8 +77,8 @@ namespace DotaMaster.Data.Repositories
                     Cost = entry.Stat?.Cost,
                     Description = entry.Language.Description ?? "Нету описания",
                     IconUrl = string.IsNullOrEmpty(entry.Image)
-                           ? $"{_dotaIconsUrl}default-image.png"
-                           : _dotaIconsUrl + entry.Image
+                           ? _dotaIconsUrl + entry.Name.Replace("item_", "") + ".png"
+                           : _dotaIconsUrl + entry.Image.Split('?')[0].Replace("_lg", "")
                 });
             }
             return items;

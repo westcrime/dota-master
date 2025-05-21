@@ -7,6 +7,7 @@ import { PickAnalysis } from "../picks-analysis";
 import { LaningAnalysis } from "../lane-analysis";
 import { ItemsAnalysis } from "../items-analysis";
 import Item from "@src/shared/models/item";
+import { GeneralInfoCard } from "../general-info";
 
 interface MatchViewProps {
   data: Match | undefined;
@@ -85,6 +86,14 @@ export const MatchView = ({
           itemsAnalysis={data.itemsAnalysis}
           heroes={heroesData}
           matchDuration={data.generalInfo.durationSeconds}
+        />
+        <GeneralInfoCard
+          generalInfo={data.generalInfo}
+          rank={data.generalInfo.rank}
+          items={itemsData}
+          matchId={data.matchId}
+          heroes={heroesData}
+          durationSeconds={data.generalInfo.durationSeconds}
         />
       </CardContent>
     </CustomCard>

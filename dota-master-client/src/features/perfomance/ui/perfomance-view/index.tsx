@@ -40,7 +40,7 @@ export const PerformanceView = ({ data, loading, error }: PerformanceViewProps) 
       <CardHeader
         title={
           <Typography variant="h5" fontWeight="bold">
-            Последние 20 матчей
+            Последние 10 матчей
           </Typography>
         }
       />

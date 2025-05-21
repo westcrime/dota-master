@@ -1,10 +1,10 @@
 import {
   Box,
-  Avatar,
-  Tooltip,
+  Typography,
   Divider,
   Stack,
-  Typography,
+  Tooltip,
+  useTheme,
 } from "@mui/material";
 import Item from "@src/shared/models/item";
 
@@ -12,75 +12,53 @@ interface ItemAvatarProps {
   item?: Item;
   size?: number;
   borderColor?: string;
-  left: number;
-  top: string;
-  zIndex: number;
-  time: string;
 }
-
-const getRandomPastelColor = () => {
-  const hue = Math.floor(Math.random() * 360);
-  return `hsl(${hue}, 70%, 75%)`;
-};
 
 export const ItemAvatar: React.FC<ItemAvatarProps> = ({
   item,
   size = 48,
-  left,
-  top,
-  zIndex,
-  time,
+  borderColor = "grey",
 }) => {
+  const theme = useTheme();
+
   if (!item) return null;
+
+  const getItemImage = () => {
+    if (
+      item.name.includes("recipe")
+    ) {
+      return "/recipe_icon.webp";
+    }
+    if (
+      item.iconUrl.includes("default-image.png")
+    ) {
+      return "/recipe_icon.webp";
+    }
+    return item.iconUrl;
+  };
+
   return (
-    <Box
-      sx={{
-        position: "absolute",
-        left: `${left}px`,
-        top: top,
-        transform: "translate(-50%, -50%)",
-        zIndex: zIndex,
-        width: size,
-        height: size,
-      }}
-    >
+    <Box sx={{ width: size + 6, height: size }}>
       <Tooltip
         title={
-          <Box sx={{ p: 1, maxWidth: 300 }}>
-            <Typography variant="h6" fontWeight="bold">
-              Время покупки - {time}
-            </Typography>
-
-            <Divider sx={{ my: 1 }} />
-            <Box
-              sx={{
-                display: "flex",
-                flexDirection: "row",
-                gap: 2,
-                alignItems: "center",
-              }}
-            >
-              <Typography variant="h6" fontWeight="bold">
-                {item.displayName}
-              </Typography>
-              <Avatar
-                src={
-                  item.name.includes("recipe") &&
-                  item.iconUrl ===
-                    "https://cdn.dota2.com/apps/dota2/images/items/default-image.png"
-                    ? "/recipe_icon.webp"
-                    : item.iconUrl
-                }
+          <Box sx={{ p: 2, maxWidth: 300 }}>
+            <Stack direction="row" spacing={2} alignItems="center" mb={1}>
+              <Box
+                component="img"
+                src={getItemImage()}
                 alt={item.displayName}
                 sx={{
-                  width: "48px",
-                  height: "48px",
-                  cursor: "pointer",
-                  border: "2px solid",
-                  transition: "transform 0.2s, box-shadow 0.2s",
+                  width: 48,
+                  height: 48,
+                  borderRadius: 1,
+                  border: `2px solid ${theme.palette.divider}`,
+                  objectFit: "contain",
                 }}
               />
-            </Box>
+              <Typography variant="subtitle1" fontWeight="bold">
+                {item.displayName}
+              </Typography>
+            </Stack>
 
             {item.cost && (
               <Typography variant="body2" color="text.secondary">
@@ -88,7 +66,7 @@ export const ItemAvatar: React.FC<ItemAvatarProps> = ({
               </Typography>
             )}
 
-            <Divider sx={{ my: 1 }} />
+            <Divider sx={{ my: 1.5 }} />
 
             <Typography variant="body2" paragraph>
               {item.description}
@@ -106,8 +84,8 @@ export const ItemAvatar: React.FC<ItemAvatarProps> = ({
 
             {item.attributes.length > 0 && (
               <>
-                <Divider sx={{ my: 1 }} />
-                <Stack spacing={0.5}>
+                <Divider sx={{ my: 1.5 }} />
+                <Stack spacing={0.75}>
                   {item.attributes.map((attr, index) => (
                     <Box key={index}>
                       <Typography variant="caption" fontWeight="bold">
@@ -126,20 +104,22 @@ export const ItemAvatar: React.FC<ItemAvatarProps> = ({
         arrow
         placement="right"
       >
-        <Avatar
-          src={
-            item.name.includes("recipe") ? "/recipe_icon.webp" : item.iconUrl
-          }
+        <Box
+          component="img"
+          src={getItemImage()}
           alt={item.displayName}
           sx={{
             width: "100%",
             height: "100%",
-            border: `3px solid ${getRandomPastelColor()}`,
+            borderRadius: 1,
+            border: `1px solid ${borderColor}`,
             cursor: "pointer",
             transition: "transform 0.2s, box-shadow 0.2s",
+            objectFit: "fill",
+            backgroundColor: theme.palette.background.paper,
             "&:hover": {
               transform: "scale(1.1)",
-              boxShadow: `0 0 10px ${getRandomPastelColor()}`,
+              boxShadow: `0 0 10px ${borderColor}`,
             },
           }}
         />

@@ -70,7 +70,6 @@ const getHero = (id: number, heroes: HeroModel[]) => {
 };
 
 export const Versus = ({ laning, rank, heroes }: VersusProps) => {
-  console.log(laning);
   const mainHero = getHero(laning.heroId, heroes);
   return (
     <Paper elevation={3} sx={{ p: 3, borderRadius: 3, mb: 3 }}>

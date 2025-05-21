@@ -35,7 +35,7 @@ namespace DotaMaster.Data.Entities.Match
     {
         public required string Position { get; set; }
         public required string SteamAccountId { get; set; }
-        public int Hero { get; set; }
+        public int HeroId { get; set; }
         public bool IsRadiant { get; set; }
         public int Networth { get; set; }
         public int Kills { get; set; }
