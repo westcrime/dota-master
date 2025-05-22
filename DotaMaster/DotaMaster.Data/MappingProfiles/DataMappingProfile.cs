@@ -15,6 +15,8 @@ namespace DotaMaster.Data.MappingProfiles
             CreateMap<UserStatsResponse, UserStats>();
             CreateMap<AvgHeroStatsResponse, AvgHeroStats>();
             CreateMap<HeroResponse, Hero>();
+            CreateMap<HeroOpendotaResponse, Hero>();
+            CreateMap<ResponseModels.Items.Attribute, Entities.Attribute>();
         }
     }
 }
