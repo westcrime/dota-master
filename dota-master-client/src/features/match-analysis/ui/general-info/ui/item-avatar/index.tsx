@@ -10,13 +10,11 @@ import Item from "@src/shared/models/item";
 
 interface ItemAvatarProps {
   item?: Item;
-  size?: number;
   borderColor?: string;
 }
 
 export const ItemAvatar: React.FC<ItemAvatarProps> = ({
   item,
-  size = 48,
   borderColor = "grey",
 }) => {
   const theme = useTheme();
@@ -38,7 +36,7 @@ export const ItemAvatar: React.FC<ItemAvatarProps> = ({
   };
 
   return (
-    <Box sx={{ width: size + 6, height: size }}>
+    <Box sx={{ width: 40, height: 32 }}>
       <Tooltip
         title={
           <Box sx={{ p: 2, maxWidth: 300 }}>
@@ -50,8 +48,6 @@ export const ItemAvatar: React.FC<ItemAvatarProps> = ({
                 sx={{
                   width: 48,
                   height: 48,
-                  borderRadius: 1,
-                  border: `2px solid ${theme.palette.divider}`,
                   objectFit: "contain",
                 }}
               />

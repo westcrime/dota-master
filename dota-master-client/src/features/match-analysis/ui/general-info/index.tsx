@@ -13,6 +13,15 @@ import {
 } from "recharts";
 import HeroModel from "@src/shared/models/hero";
 import { PlayerCard } from "./ui/player-card";
+import {
+  Paper,
+  Box,
+  Grid,
+  Typography,
+  Stack,
+  Button,
+  useTheme,
+} from "@mui/material";
 
 interface GeneralInfoCardProps {
   generalInfo: GeneralInfo;
@@ -26,7 +35,6 @@ interface GeneralInfoCardProps {
 const getHero = (id: number, heroes: HeroModel[]) => {
   return heroes.find((h) => h.id === id);
 };
-
 export const GeneralInfoCard = ({
   generalInfo,
   durationSeconds,
@@ -35,7 +43,9 @@ export const GeneralInfoCard = ({
   items,
   matchId,
 }: GeneralInfoCardProps) => {
+  const theme = useTheme();
   const [showGold, setShowGold] = useState(true);
+
   const formatTime = (seconds: number) => {
     const minutes = Math.floor(seconds / 60);
     const remainingSeconds = seconds % 60;
@@ -63,130 +73,231 @@ export const GeneralInfoCard = ({
   );
 
   return (
-    <div className="bg-gray-800 text-white rounded-xl">
+    <Paper
+      elevation={3}
+      sx={{
+        backgroundColor: theme.palette.background.paper,
+        borderRadius: 4,
+        overflow: "hidden",
+      }}
+    >
       {/* Header */}
-      <div className="flex justify-between items-center p-4 border-b border-gray-800">
-        <div className="flex items-center gap-4">
-          {/* <Sun className="h-8 w-8 text-green-500" /> */}
-          <div>
-            <h2 className="text-xl font-bold">Свет</h2>
-            <span
-              className={`text-sm ${generalInfo.didRadiantWin ? "text-green-500" : "text-red-500"}`}
-            >
-              {generalInfo.didRadiantWin ? "Победа" : "Поражение"}
-            </span>
-          </div>
-        </div>
-        <div className="flex items-center gap-4 text-2xl font-bold">
-          <span className="text-green-500">{radiantTotalKills}</span>
-          <span className="text-gray-500">{formatTime(durationSeconds)}</span>
-          <span className="text-red-500">{direTotalKills}</span>
-        </div>
-        <div className="flex items-center gap-4">
-          <div className="text-right">
-            <h2 className="text-xl font-bold">Тьма</h2>
-            <span
-              className={`text-sm ${!generalInfo.didRadiantWin ? "text-green-500" : "text-red-500"}`}
-            >
-              {!generalInfo.didRadiantWin ? "Победа" : "Поражение"}
-            </span>
-          </div>
-          {/* <Moon className="h-8 w-8 text-red-500" /> */}
-        </div>
-      </div>
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          p: 3,
+          borderBottom: `1px solid ${theme.palette.divider}`,
+        }}
+      >
+        <TeamInfo
+          teamName="Свет"
+          isWinner={generalInfo.didRadiantWin}
+          theme={theme}
+          isRadiant
+        />
 
+        <MatchScore
+          radiantKills={radiantTotalKills}
+          direKills={direTotalKills}
+          duration={formatTime(durationSeconds)}
+          theme={theme}
+        />
+
+        <TeamInfo
+          teamName="Тьма"
+          isWinner={!generalInfo.didRadiantWin}
+          theme={theme}
+        />
+      </Box>
       {/* Main Content */}
-      <div className="grid grid-cols-[1fr_2fr_1fr] gap-4 p-4">
-        {/* Left Column - Radiant Players */}
-        <div className="space-y-2">
-          {radiantPlayers.map((player, index) => (
-            <PlayerCard
-              items={items}
-              key={index}
-              player={player}
-              hero={getHero(player.heroId, heroes)}
-              side="radiant"
-            />
-          ))}
-        </div>
-
-        {/* Middle Column - Graph */}
-        <div className="bg-gray-900 rounded-lg p-4">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-lg font-bold">Прогресс матча</h3>
-            <button
-              onClick={() => setShowGold(!showGold)}
-              className="px-3 py-1 bg-gray-700 rounded text-sm"
+      <Box sx={{ p: 3 }}>
+        <Grid container>
+          {/* Radiant Players */}
+          <Grid sx={{ width: "30%" }}>
+            <Typography
+              variant="h6"
+              sx={{ mb: 2, color: theme.palette.success.main }}
             >
-              {showGold ? "Показать Опыт" : "Показать Золото"}
-            </button>
-          </div>
-
-          <ResponsiveContainer width="100%" height={400}>
-            <LineChart data={graphData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#444" />
-              <XAxis
-                dataKey="time"
-                stroke="#666"
-                tickFormatter={(value) =>
-                  `${Math.floor(value / 60)}:${(value % 60).toString().padStart(2, "0")}`
-                }
-              />
-              <YAxis stroke="#666" />
-              <ReferenceLine y={0} stroke="#ccc" strokeDasharray="3 3" />
-              <Legend />
-
-              {showGold ? (
-                <Line
-                  type="monotone"
-                  dataKey="gold"
-                  stroke="#FFD700"
-                  dot={false}
-                  strokeWidth={2}
-                  name="Преимущество в золоте"
+              Команда Света
+            </Typography>
+            <Stack spacing={2}>
+              {radiantPlayers.map((player, index) => (
+                <PlayerCard
+                  key={index}
+                  items={items}
+                  player={player}
+                  hero={getHero(player.heroId, heroes)}
+                  side="radiant"
                 />
-              ) : (
-                <Line
-                  type="monotone"
-                  dataKey="experience"
-                  stroke="#1E90FF"
-                  dot={false}
-                  strokeWidth={2}
-                  name="Преимущество в опыте"
+              ))}
+            </Stack>
+          </Grid>
+
+          {/* Graph */}
+          <Grid sx={{ width: "40%" }}>
+            <Paper elevation={2} sx={{ p: 3, height: "100%", borderRadius: 3 }}>
+              <Box
+                sx={{ display: "flex", justifyContent: "space-between", mb: 3 }}
+              >
+                <Typography variant="h6">Прогресс матча</Typography>
+                <Button
+                  variant="outlined"
+                  size="small"
+                  onClick={() => setShowGold(!showGold)}
+                  sx={{ textTransform: "none" }}
+                >
+                  {showGold ? "Показать Опыт" : "Показать Золото"}
+                </Button>
+              </Box>
+
+              <Box sx={{ height: 350 }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={graphData}>
+                    <CartesianGrid
+                      strokeDasharray="3 3"
+                      stroke={theme.palette.divider}
+                    />
+                    <XAxis
+                      dataKey="time"
+                      stroke={theme.palette.text.secondary}
+                      tickFormatter={(value) =>
+                        `${Math.floor(value / 60)}:${(value % 60).toString().padStart(2, "0")}`
+                      }
+                    />
+                    <YAxis stroke={theme.palette.text.secondary} />
+                    <ReferenceLine
+                      y={0}
+                      stroke={theme.palette.divider}
+                      strokeDasharray="3 3"
+                    />
+                    <Legend />
+                    {showGold ? (
+                      <Line
+                        type="monotone"
+                        dataKey="gold"
+                        stroke={theme.palette.warning.main}
+                        dot={false}
+                        strokeWidth={2}
+                        name="Преимущество в золоте"
+                      />
+                    ) : (
+                      <Line
+                        type="monotone"
+                        dataKey="experience"
+                        stroke={theme.palette.info.main}
+                        dot={false}
+                        strokeWidth={2}
+                        name="Преимущество в опыте"
+                      />
+                    )}
+                  </LineChart>
+                </ResponsiveContainer>
+              </Box>
+            </Paper>
+          </Grid>
+
+          {/* Dire Players */}
+          <Grid sx={{ width: "30%" }}>
+            <Typography
+              variant="h6"
+              sx={{ mb: 2, color: theme.palette.error.main }}
+            >
+              Команда Тьмы
+            </Typography>
+            <Stack spacing={2}>
+              {direPlayers.map((player, index) => (
+                <PlayerCard
+                  key={index}
+                  items={items}
+                  player={player}
+                  hero={getHero(player.heroId, heroes)}
+                  side="dire"
                 />
-              )}
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
+              ))}
+            </Stack>
+          </Grid>
+        </Grid>
+      </Box>
 
-        {/* Right Column - Dire Players */}
-        <div className="space-y-2">
-          {direPlayers.map((player, index) => (
-            <PlayerCard
-              items={items}
-              key={index}
-              player={player}
-              hero={getHero(player.heroId, heroes)}
-              side="dire"
-            />
-          ))}
-        </div>
-      </div>
-
-      {/* Footer - Match Info */}
-      <div className="border-t border-gray-800 p-4 flex items-center justify-between text-sm text-gray-400">
-        <div>Match ID: {matchId}</div>
-        <div className="flex items-center gap-2">
-          <span>Средний ранг:</span>
-          <img
+      {/* Footer */}
+      <Box
+        sx={{
+          p: 2,
+          borderTop: `1px solid ${theme.palette.divider}`,
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          backgroundColor: theme.palette.background.default,
+        }}
+      >
+        <Typography variant="body2" color="text.secondary">
+          Match ID: {matchId}
+        </Typography>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+          <Typography variant="body2" color="text.secondary">
+            Средний ранг:
+          </Typography>
+          <Box
+            component="img"
             src={`/ranks/${rank}.webp`}
             alt="rank"
-            width={80}
-            height={80}
-            className="w-8 h-8"
+            sx={{ width: 40, height: 40 }}
           />
-        </div>
-      </div>
-    </div>
+        </Box>
+      </Box>
+    </Paper>
   );
 };
+
+const TeamInfo = ({ teamName, isWinner, theme, isRadiant = false }) => (
+  <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+    <Box
+      sx={{
+        width: 12,
+        height: 12,
+        borderRadius: "50%",
+        backgroundColor: isRadiant
+          ? theme.palette.success.main
+          : theme.palette.error.main,
+      }}
+    />
+    <Box>
+      <Typography variant="h6">{teamName}</Typography>
+      <Typography
+        variant="body2"
+        color={isWinner ? "success.main" : "error.main"}
+      >
+        {isWinner ? "Победа" : "Поражение"}
+      </Typography>
+    </Box>
+  </Box>
+);
+
+const MatchScore = ({ radiantKills, direKills, duration, theme }) => (
+  <Box
+    sx={{
+      display: "flex",
+      alignItems: "center",
+      gap: 3,
+      px: 4,
+      py: 1,
+      borderRadius: 2,
+      backgroundColor: theme.palette.background.default,
+    }}
+  >
+    <Typography variant="h4" color="success.main">
+      {radiantKills}
+    </Typography>
+    <Box sx={{ textAlign: "center" }}>
+      <Typography variant="body1" color="text.secondary">
+        {duration}
+      </Typography>
+      <Typography variant="caption">Длительность</Typography>
+    </Box>
+    <Typography variant="h4" color="error.main">
+      {direKills}
+    </Typography>
+  </Box>
+);

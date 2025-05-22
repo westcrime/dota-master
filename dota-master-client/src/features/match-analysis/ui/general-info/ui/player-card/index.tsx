@@ -8,6 +8,7 @@ import {
   Stack,
   Typography,
   Tooltip,
+  useTheme,
 } from "@mui/material";
 import { PlayerStats } from "@src/features/match-analysis/models/match";
 import HeroModel from "@src/shared/models/hero";
@@ -22,29 +23,30 @@ interface StatItemProps {
   label: string;
   value: string | number;
 }
+const GPM_ICON = "/records/goldIcon.png";
+const XPM_ICON = "/records/xpIcon.png";
 
 const StatItem = ({ icon, label, value }: StatItemProps) => (
   <Grid>
-    <Box
-      component="img"
-      src={icon}
-      alt={label}
-      sx={{ width: 20, height: 20 }}
-    />
-    <Typography variant="body2">
-      {label}:{" "}
-      <Typography component="span" fontWeight="bold">
-        {value}
+    <Stack direction="row" spacing={1} alignItems="center">
+      <Box
+        component="img"
+        src={icon}
+        alt={label}
+        sx={{ width: 20, height: 20, opacity: 0.8 }}
+      />
+      <Typography variant="body2">
+        {label}: <b>{value}</b>
       </Typography>
-    </Typography>
+    </Stack>
   </Grid>
 );
 
 export const PlayerCard = ({
   player,
   hero,
-  side,
   items,
+  side,
 }: {
   player: PlayerStats;
   hero?: HeroModel;
@@ -52,6 +54,7 @@ export const PlayerCard = ({
   side: "radiant" | "dire";
 }) => {
   const [showStats, setShowStats] = useState(false);
+  const theme = useTheme();
 
   const playerItems = [
     player.item0Id,
@@ -67,163 +70,187 @@ export const PlayerCard = ({
   if (!hero) return null;
 
   const teamBgColor =
-    side === "radiant" ? "rgba(76, 175, 80, 0.1)" : "rgba(244, 67, 54, 0.1)";
+    side === "radiant"
+      ? theme.palette.success.light + "22"
+      : theme.palette.error.light + "22";
 
-  if (showStats) {
-    return (
-      <Card
-        sx={{
-          backgroundColor: teamBgColor,
-          borderRadius: 2,
-          p: 2,
-          position: "relative",
-        }}
-      >
-        <Box
-          display="flex"
-          justifyContent="space-between"
-          alignItems="center"
-          mb={2}
-        >
-          <Typography variant="h6" fontWeight="bold">
-            {hero.displayName}
-          </Typography>
-          <IconButton
-            onClick={toggleStats}
-            size="small"
-            sx={{ color: "text.secondary" }}
-          >
-            <ArrowBackIcon fontSize="small" />
-          </IconButton>
-        </Box>
-
-        <Divider sx={{ my: 1, borderColor: "divider" }} />
-
-        <Grid container spacing={2}>
-          <StatItem
-            icon="/records/killsIcon.png"
-            label="KDA"
-            value={`${player.kills}/${player.deaths}/${player.assists}`}
-          />
-          <StatItem
-            icon="/records/goldIcon.png"
-            label="Общая ценность"
-            value={player.networth}
-          />
-          <StatItem
-            icon="/records/heroDamageIcon.png"
-            label="Золото в минуту"
-            value={player.goldPerMinute}
-          />
-          <StatItem
-            icon="/records/xpIcon.png"
-            label="Опыт в минуту"
-            value={player.experiencePerMinute}
-          />
-          <StatItem
-            icon="/records/lastHitsIcon.png"
-            label="Добитые крипы"
-            value={player.numLastHits}
-          />
-          <StatItem
-            icon="/records/deniesIcon.png"
-            label="Неотданные крипы"
-            value={player.numDenies}
-          />
-          <StatItem
-            icon="/records/killsIcon.png"
-            label="Перфоманс"
-            value={player.imp}
-          />
-        </Grid>
-      </Card>
-    );
-  }
+  const cardBaseStyles = {
+    backgroundColor: teamBgColor,
+    borderRadius: 3,
+    p: 2,
+    boxShadow: theme.shadows[2],
+    transition: "transform 0.2s ease",
+    "&:hover": {
+      transform: "translateY(-2px)",
+      boxShadow: theme.shadows[4],
+    },
+  };
 
   return (
-    <Card
-      sx={{
-        backgroundColor: teamBgColor,
-        borderRadius: 2,
-        p: 2,
-        cursor: "pointer",
-        transition: "all 0.2s",
-        "&:hover": {
-          transform: "translateY(-2px)",
-          boxShadow: 2,
-        },
-      }}
-      onClick={toggleStats}
-    >
-      <Stack direction="row" spacing={2} alignItems="center">
-        <Box position="relative">
-          <Avatar
-            sx={{ width: 56, height: 56 }}
-            src={`${import.meta.env.VITE_PUBLIC_HERO_PORTRAITS_DOMAIN}/${hero?.name.replace(
-              "npc_dota_hero_",
-              ""
-            )}.png`}
-            alt={hero.displayName}
-          />
-          <Box
-            position="absolute"
-            top={-8}
-            right={-8}
-            px={1}
-            py={0.5}
-            borderRadius={4}
-            bgcolor={player.imp >= 0 ? "success.main" : "error.main"}
-          >
-            <Typography variant="caption" color="common.white">
-              {player.imp > 0 ? "+" : ""}
-              {player.imp}
-            </Typography>
-          </Box>
-        </Box>
-
-        <Box flex={1}>
+    <Card sx={cardBaseStyles} onClick={!showStats ? toggleStats : undefined}>
+      {showStats ? (
+        <>
           <Box
             display="flex"
             justifyContent="space-between"
             alignItems="center"
+            mb={2}
           >
             <Typography variant="h6" fontWeight="bold">
               {hero.displayName}
             </Typography>
-            <Typography variant="body1" fontWeight="bold">
-              {player.kills}/{player.deaths}/{player.assists}
-            </Typography>
+            <IconButton
+              onClick={toggleStats}
+              size="small"
+              sx={{ color: "text.secondary" }}
+            >
+              <ArrowBackIcon fontSize="small" />
+            </IconButton>
           </Box>
 
-          <Box display="flex" justifyContent="space-between" mt={0.5}>
-            <Typography variant="caption" color="gold">
-              GPM: {player.goldPerMinute}
-            </Typography>
-            <Typography variant="caption" color="primary.main">
-              XPM: {player.experiencePerMinute}
-            </Typography>
+          <Divider sx={{ mb: 2 }} />
+
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+            <StatItem
+              icon="/records/killsIcon.png"
+              label="KDA"
+              value={`${player.kills}/${player.deaths}/${player.assists}`}
+            />
+            <StatItem
+              icon="/records/goldIcon.png"
+              label="Нетворс"
+              value={player.networth}
+            />
+            <StatItem
+              icon="/records/heroDamageIcon.png"
+              label="GPM"
+              value={player.goldPerMinute}
+            />
+            <StatItem
+              icon="/records/xpIcon.png"
+              label="XPM"
+              value={player.experiencePerMinute}
+            />
+            <StatItem
+              icon="/records/lastHitsIcon.png"
+              label="Добито крипов"
+              value={player.numLastHits}
+            />
+            <StatItem
+              icon="/records/deniesIcon.png"
+              label="Не отдано крипов"
+              value={player.numDenies}
+            />
+            <StatItem
+              icon="/records/killsIcon.png"
+              label="Импакт"
+              value={player.imp}
+            />
+          </Box>
+        </>
+      ) : (
+        <Stack direction="row" spacing={2} alignItems="center">
+          <Box position="relative">
+            <Avatar
+              sx={{
+                width: 56,
+                height: 56,
+                border: "2px solid",
+                borderColor: theme.palette.divider,
+                boxShadow: 2,
+              }}
+              src={`${import.meta.env.VITE_PUBLIC_HERO_PORTRAITS_DOMAIN}/${hero?.name.replace(
+                "npc_dota_hero_",
+                ""
+              )}.png`}
+              alt={hero.displayName}
+            />
+            <Box
+              position="absolute"
+              top={-6}
+              right={-6}
+              px={1}
+              py={0.3}
+              borderRadius={6}
+              bgcolor={player.imp >= 0 ? "success.main" : "error.main"}
+              boxShadow={1}
+            >
+              <Typography variant="caption" color="common.white">
+                {player.imp > 0 ? "+" : ""}
+                {player.imp}
+              </Typography>
+            </Box>
           </Box>
 
-          <Stack direction="row" spacing={0.5} mt={1.5}>
-            {playerItems.map(
-              (item, index) =>
-                item && (
-                  <ItemAvatar
-                    key={index}
-                    item={items.find((i) => item === i.id)}
-                    size={30}
-                  />
-                )
-            )}
-          </Stack>
-        </Box>
+          <Box flex={1}>
+            <Box
+              display="flex"
+              justifyContent="space-between"
+              alignItems="center"
+              mb={0.5}
+            >
+              <Typography variant="subtitle1" fontWeight={600}>
+                {hero.displayName}
+              </Typography>
+              <Typography
+                variant="h6"
+                fontWeight="bold"
+                sx={{ color: theme.palette.text.primary }}
+              >
+                {player.kills}/{player.deaths}/{player.assists}
+              </Typography>
+            </Box>
 
-        <Tooltip title="Подробная статистика">
-          <IconButton size="small" sx={{ color: "text.secondary" }}>
-            <InfoIcon fontSize="small" />
-          </IconButton>
-        </Tooltip>
-      </Stack>
+            <Stack direction="row" spacing={2} alignItems="center">
+              <Stack direction="row" spacing={0.5} alignItems="center">
+                <Box
+                  component="img"
+                  src={GPM_ICON}
+                  alt="GPM"
+                  sx={{ width: 16, height: 16, opacity: 0.8 }}
+                />
+                <Typography variant="caption" color="gold">
+                  GPM {player.goldPerMinute}
+                </Typography>
+              </Stack>
+
+              <Stack direction="row" spacing={0.5} alignItems="center">
+                <Box
+                  component="img"
+                  src={XPM_ICON}
+                  alt="XPM"
+                  sx={{ width: 16, height: 16, opacity: 0.8 }}
+                />
+                <Typography variant="caption" color="#89cdfa">
+                  XPM {player.experiencePerMinute}
+                </Typography>
+              </Stack>
+            </Stack>
+
+            <Box
+              display="grid"
+              gridTemplateColumns="repeat(3, 36px)"
+              gap={0.5}
+              mt={1}
+            >
+              {playerItems.map(
+                (item, index) =>
+                  item && (
+                    <Box key={index}>
+                      <ItemAvatar item={items.find((i) => i.id === item)} />
+                    </Box>
+                  )
+              )}
+            </Box>
+          </Box>
+
+          <Tooltip title="Подробная статистика">
+            <IconButton size="small" sx={{ color: "text.secondary" }}>
+              <InfoIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        </Stack>
+      )}
     </Card>
   );
 };
