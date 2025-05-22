@@ -10,7 +10,7 @@ namespace DotaMaster.Application.Services
 {
     public class MatchService(MatchRepository matchRepository, ItemRepository itemRepository, HeroRepository heroRepository, IMapper mapper, AiRepository aiRepository)
     {
-        private const string template = "Ответь на русском. Не используй специальные знаки для декорации текста, только сплошной текст. Обращение от 2 лица к игроку. Максмальная длина - до 100 слов. Дай также советы чтобы улучшить этот аспект.";
+        private const string template = "Ответь на русском. Используй английский для названия героев, не переводи их на русский. Не используй специальные знаки для декорации текста, только сплошной текст. Обращение от 2 лица к игроку. Максмальная длина - до 100 слов. Дай также советы чтобы улучшить этот аспект.";
         private readonly MatchRepository _matchRepository = matchRepository;
         private readonly ItemRepository _itemRepository = itemRepository;
         private readonly HeroRepository _heroRepository = heroRepository;
@@ -41,7 +41,7 @@ namespace DotaMaster.Application.Services
             var picks = await _matchRepository.GetPickAsync(rank, rankBracket, dotaId, userStats.HeroId, userStats.Position, alliedHeroIds!, enemyHeroIds!);
 
             StringBuilder aiRequest = new StringBuilder();
-            aiRequest.Append(JsonConvert.SerializeObject((await _itemRepository.GetAllItemsAsync()).Select(i => $"{i.Id} {i.Title}"), Formatting.Indented));
+            aiRequest.Append(JsonConvert.SerializeObject((await _itemRepository.GetAllItemsAsync()).Select(i => $"{i.Id} {i.Name} Attribute: {JsonConvert.SerializeObject(i.Attributes)}"), Formatting.Indented));
             aiRequest.Append(JsonConvert.SerializeObject((await _heroRepository.GetHeroes()).Select(h => $"{h.Id} {h.DisplayName}"), Formatting.Indented));
             aiRequest.Append(JsonConvert.SerializeObject(generalInfo, Formatting.Indented));
             aiRequest.Append(JsonConvert.SerializeObject(userStats, Formatting.Indented));
@@ -51,16 +51,21 @@ namespace DotaMaster.Application.Services
             aiRequest.Append(template);
 
             StringBuilder aiPickRequest = new StringBuilder(aiRequest.ToString());
-            aiPickRequest.Append("Дай анализ пика героя для игрока, исходя из информации объектов. Не затрагивай другие аспекты, только Пики");
+            aiPickRequest.Append("Дай анализ пика героя для игрока, исходя из информации объектов (Винрейт указан как винрейт героя игрока против или за героев). Не затрагивай другие аспекты, только Пики. Проанализируй каждый матчап. Постарайся кратко объяснить причину либо очень низкого или высокого винрейта против/за некоторых героев.");
             var pickAdvice = await _aiRepository.AskAi(aiPickRequest.ToString());
 
             StringBuilder aiLaningRequest = new StringBuilder(aiRequest.ToString());
-            aiLaningRequest.Append("Дай анализ лайнинга игрока, исходя из информации объектов. Не затрагивай другие аспекты, только Лайнинг");
+            aiLaningRequest.Append("Дай анализ лайнинга игрока, исходя из информации объектов. Не затрагивай другие аспекты, только Лайнинг. Исходя из этой информации дай совет как улучшить лайнинг игрока, если в нем есть проблемы.");
             var laningAdvice = await _aiRepository.AskAi(aiLaningRequest.ToString());
 
             StringBuilder aiItemsRequest = new StringBuilder(aiRequest.ToString());
-            aiItemsRequest.Append("Дай анализ покупки предметов героя для игрока, исходя из информации объектов (времени приобретения (переврди в минуты и секунды время) и героев против и за игрока). Не затрагивай другие аспекты, только Предметы и их актуальность");
+            aiItemsRequest.Append("Дай анализ покупки предметов героя для игрока, исходя из информации объектов (времени приобретения (переврди в минуты и секунды время) и героев против и за игрока). Не затрагивай другие аспекты, только Предметы и их актуальность. Дай краткий совет, если есть вариант получше из предметов против героев противника.");
             var itemsAdvice = await _aiRepository.AskAi(aiItemsRequest.ToString());
+
+            var laningMatchModel = _mapper.Map<Models.Match.Laning>(laning);
+            var generalInfoMatchModel = _mapper.Map<GeneralInfo>(generalInfo);
+            laningMatchModel.LaneAlliesHeroIds = GetLaneAllies(userStats.Position, userStats.IsRadiant, generalInfoMatchModel);
+            laningMatchModel.LaneEnemiesHeroIds = GetLaneEnemies(userStats.Position, userStats.IsRadiant, generalInfoMatchModel);
 
             var matchModel = new MatchModel()
             {
@@ -69,9 +74,9 @@ namespace DotaMaster.Application.Services
                 WinratesAnalysis = pickAdvice,
                 ItemsAnalysis = itemsAdvice,
                 LaningAnalysis = laningAdvice,
-                Laning = _mapper.Map<Models.Match.Laning>(laning),
+                Laning = laningMatchModel,
                 AvgHeroStats = _mapper.Map<Models.Match.AvgHeroStats>(avgHeroStats),
-                GeneralInfo = _mapper.Map<GeneralInfo>(generalInfo),
+                GeneralInfo = generalInfoMatchModel,
                 UserStats = _mapper.Map<Models.Match.UserStats>(userStats),
                 Picks = _mapper.Map<Picks>(picks)
             };
@@ -79,6 +84,84 @@ namespace DotaMaster.Application.Services
             await _matchRepository.CreateMatch(_mapper.Map<MatchEntity>(matchModel));
 
             return matchModel;
+        }
+
+        private static List<int> GetLaneAllies(string playerPosition, bool isRadiant, GeneralInfo generalInfo)
+        {
+            var laneAllies = new List<int>();
+
+            var alliedPositions = new List<string>();
+
+            switch (playerPosition)
+            {
+                case "POSITION_1":
+                    alliedPositions.Add("POSITION_5");
+                    break;
+                case "POSITION_2":
+                    break;
+                case "POSITION_3":
+                    alliedPositions.Add("POSITION_4");
+                    break;
+                case "POSITION_4":
+                    alliedPositions.Add("POSITION_3");
+                    break;
+                case "POSITION_5":
+                    alliedPositions.Add("POSITION_1");
+                    break;
+                default:
+                    return laneAllies;
+            }
+
+            foreach (var player in generalInfo.Players)
+            {
+                if (player.IsRadiant == isRadiant && alliedPositions.Contains(player.Position))
+                {
+                    laneAllies.Add(player.HeroId);
+                }
+            }
+
+            return laneAllies;
+        }
+
+        private static List<int> GetLaneEnemies(string playerPosition, bool isRadiant, GeneralInfo generalInfo)
+        {
+            var laneEnemies = new List<int>();
+            var enemyPositions = new List<string>();
+
+            switch (playerPosition)
+            {
+                case "POSITION_1":
+                    enemyPositions.Add("POSITION_3");
+                    enemyPositions.Add("POSITION_4");
+                    break;
+                case "POSITION_2":
+                    enemyPositions.Add("POSITION_2");
+                    break;
+                case "POSITION_3":
+                    enemyPositions.Add("POSITION_1");
+                    enemyPositions.Add("POSITION_5");
+                    break;
+                case "POSITION_4":
+                    enemyPositions.Add("POSITION_1");
+                    enemyPositions.Add("POSITION_5");
+                    break;
+                case "POSITION_5":
+                    enemyPositions.Add("POSITION_3");
+                    enemyPositions.Add("POSITION_4");
+                    break;
+                default:
+                    return laneEnemies;
+            }
+
+            foreach (var player in generalInfo.Players)
+            {
+                if (player.IsRadiant != isRadiant && enemyPositions.Contains(player.Position))
+                {
+                    laneEnemies.Add(player.HeroId);
+                }
+            }
+
+            return laneEnemies;
         }
 
         private static (string rank, string rankBracket) GetRank(int matchRank)

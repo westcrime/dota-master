@@ -14,5 +14,11 @@ namespace DotaMaster.Application.Services
             var heroes = await _heroRepository.GetHeroes();
             return _mapper.Map<IEnumerable<HeroModel>>(heroes);
         }
+
+        public async Task<IEnumerable<HeroModel>> GetOpendota()
+        {
+            var heroes = await _heroRepository.GetHeroesOpendota();
+            return _mapper.Map<IEnumerable<HeroModel>>(heroes);
+        }
     }
 }

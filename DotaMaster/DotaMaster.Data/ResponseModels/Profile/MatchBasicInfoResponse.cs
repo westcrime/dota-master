@@ -15,6 +15,12 @@ namespace DotaMaster.Data.ResponseModels.Profile
 
         [JsonProperty("duration")]
         public int Duration { get; set; }
+        
+        [JsonProperty("start_time")]
+        public int StartTime { get; set; }
+        
+        [JsonProperty("skill")]
+        public int Skill { get; set; }
 
         [JsonProperty("hero_id")]
         public int HeroId { get; set; }
@@ -24,6 +30,9 @@ namespace DotaMaster.Data.ResponseModels.Profile
 
         [JsonProperty("deaths")]
         public int Deaths { get; set; }
+
+        [JsonProperty("average_rank")]
+        public int? AverageRank { get; set; }
 
         [JsonProperty("assists")]
         public int Assists { get; set; }

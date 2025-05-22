@@ -94,6 +94,8 @@
     {
         public required string Position { get; set; }
         public required string Rank { get; set; }
+        public required List<int> LaneAlliesHeroIds { get; set; }
+        public required List<int> LaneEnemiesHeroIds { get; set; }
         public int HeroId { get; set; }
         public long DotaId { get; set; }
         public int LaningCs { get; set; }

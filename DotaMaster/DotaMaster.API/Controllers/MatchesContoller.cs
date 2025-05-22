@@ -2,6 +2,7 @@
 using DotaMaster.Application.Models.Match;
 using DotaMaster.Application.Services;
 using DotaMaster.Domain.Exceptions;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace DotaMaster.API.Controllers
@@ -13,6 +14,7 @@ namespace DotaMaster.API.Controllers
         private readonly MatchService _matchService = matchService;
         private readonly ILogger<MatchesContoller> _logger = logger;
 
+        [Authorize]
         [HttpGet()]
         public async Task<MatchModel> Get([FromQuery] string matchId)
         {

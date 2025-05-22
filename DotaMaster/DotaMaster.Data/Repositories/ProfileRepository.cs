@@ -6,6 +6,7 @@ using Newtonsoft.Json.Linq;
 using System.Net.Http.Headers;
 using System.Text;
 using DotaMaster.Data.ResponseModels.Profile;
+using System.Reactive;
 
 namespace DotaMaster.Data.Repositories
 {
@@ -15,11 +16,13 @@ namespace DotaMaster.Data.Repositories
         private readonly string _stratzApiKey;
         private readonly IConfiguration _configuration;
         private readonly HttpClient _httpClient;
+        private readonly HeroRepository _heroRepository;
         private const string _openDotaUrl = "https://api.opendota.com/api";
         private const string _stratzGraphqlUrl = "https://api.stratz.com/graphql";
 
-        public ProfileRepository(IConfiguration configuration, HttpClient httpClient)
+        public ProfileRepository(IConfiguration configuration, HttpClient httpClient, HeroRepository heroRepository)
         {
+            _heroRepository = heroRepository;
             _httpClient = httpClient;
             _configuration = configuration;
             _steamApiKey = _configuration["Steam:ApiKey"]
@@ -227,27 +230,36 @@ namespace DotaMaster.Data.Repositories
             }).ToList();
         }
 
-        public async Task<IEnumerable<MatchBasicInfo>> GetMatchesInfoAsync(string steamId, int limit = 15, int offset = 0)
+        public async Task<IEnumerable<MatchBasicInfo>> GetMatchesInfoAsync(string steamId, int? heroId, int limit = 15, int offset = 0)
         {
             var dotaId = SteamIdConverter.SteamIdToDotaId(SteamIdConverter.GetIDFromCommunity(steamId));
-            string url = $"{_openDotaUrl}/{dotaId}/matches?game_mode=22&limit={limit}&offset={offset}";
+            string url = $"{_openDotaUrl}/players/{dotaId}/matches?game_mode=22&limit={limit}&offset={offset}";
+            if (heroId != null)
+            {
+                url += $"&hero_id={heroId}";
+            }
 
             var response = await _httpClient.GetAsync(url);
             response.EnsureSuccessStatusCode();
 
             var matchesJson = await response.Content.ReadAsStringAsync();
             var matches = JsonConvert.DeserializeObject<MatchBasicInfoResponse[]>(matchesJson)
-                ?? throw new ArgumentNullException("Can not parse GetMatchesInfoAsync response: response is null"); ;
+                ?? throw new ArgumentNullException("Can not parse GetMatchesInfoAsync response: response is null");
+
+            var heroes = await _heroRepository.GetHeroesOpendota();
 
             return matches.Select(match => new MatchBasicInfo
             {
                 MatchId = match.MatchId,
-                HeroId = match.HeroId,
+                Hero = heroes.First(h => h.Id == match.HeroId),
                 IsWin = match.PlayerSlot < 100? match.RadiantWin : !match.RadiantWin,
                 Duration = TimeSpan.FromSeconds(match.Duration),
                 Kills = match.Kills,
+                Skill = match.Skill,
+                StartTime = DateTimeOffset.FromUnixTimeSeconds(match.StartTime).UtcDateTime,
                 Deaths = match.Deaths,
-                Assists = match.Assists
+                Assists = match.Assists,
+                AverageRank = match.AverageRank ?? 0
             }).ToList();
         }
 

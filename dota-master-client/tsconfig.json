@@ -1,0 +1,21 @@
+{
+  "compilerOptions": {
+    "esModuleInterop": true,
+    "paths": {
+      "@api/*": ["./src/api/*"],
+      "@src/*": ["./src/*"],
+      "@pages/*": ["./src/pages/*"],
+      "@widgets/*": ["./src/widgets/*"],
+      "@shared/*": ["./src/shared/*"],
+      "@context/*": ["./src/context/*"],
+      "@models/*": ["./src/shared/models/*"],
+      "@features/*": ["./src/features/*"],
+      "@store/*": ["./src/store/*"]
+    }
+  },
+  "files": [],
+  "references": [
+    { "path": "./tsconfig.app.json" },
+    { "path": "./tsconfig.node.json" }
+  ]
+}

@@ -4,8 +4,10 @@
         string MatchId,
         bool IsWin,
         TimeSpan Duration,
-        int HeroId,
+        DateTime StartTime,
+        HeroModel Hero,
         int Kills,
         int Deaths,
+        int AverageRank,
         int Assists);
 }
