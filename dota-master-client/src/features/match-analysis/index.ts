@@ -1,1 +1,1 @@
-export { Perfomance } from "./ui";
+export { MatchAnalysis } from "./ui";

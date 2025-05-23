@@ -11,6 +11,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DotaMaster.Application", "D
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DotaMaster.Domain", "DotaMaster.Domain\DotaMaster.Domain.csproj", "{86D400F6-05F6-4EF8-A918-A42041873F16}"
 EndProject
+Project("{E53339B2-1760-4266-BCC7-CA923CBCF16C}") = "docker-compose", "docker-compose.dcproj", "{835C9B0C-169E-4037-8E1D-B7D4FCDF933B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -33,6 +35,10 @@ Global
 		{86D400F6-05F6-4EF8-A918-A42041873F16}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{86D400F6-05F6-4EF8-A918-A42041873F16}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{86D400F6-05F6-4EF8-A918-A42041873F16}.Release|Any CPU.Build.0 = Release|Any CPU
+		{835C9B0C-169E-4037-8E1D-B7D4FCDF933B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{835C9B0C-169E-4037-8E1D-B7D4FCDF933B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{835C9B0C-169E-4037-8E1D-B7D4FCDF933B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{835C9B0C-169E-4037-8E1D-B7D4FCDF933B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

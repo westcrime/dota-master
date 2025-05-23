@@ -15,27 +15,29 @@ services:
       - mongodb
     build:
       context: ./DotaMaster      
-      dockerfile: Dockerfile
+      dockerfile: dockerfile
     container_name: dotamaster-backend
     ports:
       - "5226:80" 
     environment:
       ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_URLS: http://+:80
 
   frontend:
-    image: frontend
+    build:
+      context: ./dota-master-client
+      dockerfile: dockerfile
+    container_name: dotamaster-frontend
     depends_on:
       - mongodb
       - backend
-    build:
-      context: .
-      dockerfile: .dota-master-client/Dockerfile
+    volumes:
+      - .:/app
+    ports:
+      - "3000:3000"
     environment:
-      NODE_ENV: production
       VITE_PUBLIC_BACKEND_DOMAIN: http://localhost:5226
       VITE_PUBLIC_HERO_PORTRAITS_DOMAIN: https://cdn.dota2.com/apps/dota2/images/dota_react/heroes
       VITE_PUBLIC_ITEM_ICONS_DOMAIN: https://cdn.dota2.com
       VITE_PUBLIC_HERO_ICONS_DOMAIN: https://cdn.stratz.com/images/dota2/heroes
       VITE_MATCHES_LIMIT_SIZE: 15
-    ports:
-      - 3000:3000

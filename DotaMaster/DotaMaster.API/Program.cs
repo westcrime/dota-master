@@ -21,7 +21,12 @@ builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
     {
-        policy.WithOrigins("http://localhost:3000")
+        policy.WithOrigins(configuration["FrontendUrl"] ?? throw new ArgumentNullException("FrontendUrl is null"))
+              .AllowAnyHeader()
+              .AllowAnyMethod()
+              .AllowCredentials();
+
+        policy.WithOrigins(configuration["FrontendDockerUrl"] ?? throw new ArgumentNullException("FrontendBackendUrl is null"))
               .AllowAnyHeader()
               .AllowAnyMethod()
               .AllowCredentials();

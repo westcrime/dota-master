@@ -7,6 +7,9 @@ import path from "path";
 // https://vite.dev/config/
 export default defineConfig({
   server: {
+    watch: {
+      usePolling: true,
+    },
     port: 3000,
     strictPort: true,
     host: true,
