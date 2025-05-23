@@ -21,6 +21,7 @@ import {
   Stack,
   Button,
   useTheme,
+  Theme,
 } from "@mui/material";
 
 interface GeneralInfoCardProps {
@@ -251,7 +252,19 @@ export const GeneralInfoCard = ({
   );
 };
 
-const TeamInfo = ({ teamName, isWinner, theme, isRadiant = false }) => (
+interface TeamInfoProps {
+  teamName: string;
+  isWinner: boolean;
+  theme: Theme;
+  isRadiant?: boolean;
+}
+
+const TeamInfo = ({
+  teamName,
+  isWinner,
+  theme,
+  isRadiant = false,
+}: TeamInfoProps) => (
   <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
     <Box
       sx={{
@@ -275,7 +288,19 @@ const TeamInfo = ({ teamName, isWinner, theme, isRadiant = false }) => (
   </Box>
 );
 
-const MatchScore = ({ radiantKills, direKills, duration, theme }) => (
+interface MatchScoreProps {
+  radiantKills: number;
+  direKills: number;
+  duration: string;
+  theme: Theme;
+}
+
+const MatchScore = ({
+  radiantKills,
+  direKills,
+  duration,
+  theme,
+}: MatchScoreProps) => (
   <Box
     sx={{
       display: "flex",
