@@ -19,7 +19,7 @@ interface HeroesOpendotaSelectProps {
   name?: string;
   onChange?: (event: SelectChangeEvent<number>) => void;
   onBlur?: (event: React.FocusEvent<HTMLInputElement>) => void;
-  value?: number; // Изменено на number, так как мы работаем с id
+  value?: number;
   disabled?: boolean;
   className?: string;
   isLoadingRequired: boolean;
